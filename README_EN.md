@@ -157,13 +157,3 @@ The bundled fonts in `skills/prism/assets/fonts/` include commercial copyrighted
 This repository does not grant commercial font usage rights. Anyone who uses the bundled fonts commercially must obtain the proper font licenses independently and is solely responsible for any resulting legal or licensing issues.
 
 See `THIRD_PARTY_NOTICES.md` for details.
-
-## Thanks
-
-Prism's visual language is strongly inspired by [Kami](https://github.com/tw93/Kami): warm paper, ink blue, serif hierarchy, and quiet diagram restraint.
-
-Prism builds on that foundation for concept explanation: cognition ladders, abstract analogies, interactive HTML, SVG teaching animations, source boundaries, and misconception handling.
-
-If Prism helps you, please also check out Kami, star it, or support its author here:
-
-<a href="https://cats.tw93.fun?name=Kami"><img src="https://cdn.jsdelivr.net/gh/tw93/sponsors@main/assets/sponsors.svg" width="720" loading="lazy" alt="Support Kami" /></a>

@@ -165,13 +165,3 @@ Prism 公开发布，免费供个人学习、交流、研究和实验使用。
 本仓库不授予任何字体商用授权。任何人如果将这些字体用于商业用途，都需要自行向相关权利方取得合法授权，并自行承担由此产生的版权、授权、侵权或法律责任。
 
 更多说明见 `THIRD_PARTY_NOTICES.md`。
-
-## 致谢
-
-Prism 的视觉语言受到 [Kami](https://github.com/tw93/Kami) 很大启发：暖色纸面、油墨蓝、衬线层级、克制的图形语言，都来自 Kami 对“好内容应该落在好纸面上”的设计判断。
-
-Prism 在这个基础上做了面向概念解释的改良：从静态文档排版，进一步扩展到认知阶梯、抽象比喻、交互式 HTML、SVG 教学动画、来源边界和误区辨析。
-
-如果你喜欢 Prism，也建议去看看 Kami、给它一个 star，或者支持 Kami 作者的赞助入口：
-
-<a href="https://cats.tw93.fun?name=Kami"><img src="https://cdn.jsdelivr.net/gh/tw93/sponsors@main/assets/sponsors.svg" width="720" loading="lazy" alt="Support Kami" /></a>
