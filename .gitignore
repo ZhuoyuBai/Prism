@@ -1,0 +1,16 @@
+.DS_Store
+*.pyc
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+node_modules/
+dist/
+build/
+.env
+.env.*
+auth.json
+secrets.*
+*.log
+*.tmp
+*.bak

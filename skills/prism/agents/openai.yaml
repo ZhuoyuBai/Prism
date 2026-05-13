@@ -1,0 +1,5 @@
+interface:
+  display_name: "Prism · 棱镜"
+  short_description: "Create interactive HTML concept maps"
+  brand_color: "#1B365D"
+  default_prompt: "Use $prism to explain RAG as an interactive HTML cognition map for non-specialists."

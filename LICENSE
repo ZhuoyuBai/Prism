@@ -1,0 +1,53 @@
+# Prism Skill Non-Commercial License
+
+Copyright (c) 2026 Prism Skill contributors.
+
+This repository is made publicly available for free personal use, learning,
+communication, research, and experimentation.
+
+## Permitted Use
+
+You may:
+
+- View, study, and learn from the source files.
+- Copy and run the skill for personal, non-commercial use.
+- Modify the skill for personal learning, private experiments, and non-commercial exchange.
+- Share non-commercial improvements or discussions, provided that this license notice is preserved.
+
+## Commercial Use Is Not Allowed Without Permission
+
+You may not use this skill, modified versions of this skill, or substantial parts
+of this skill for commercial purposes without prior written permission from the
+copyright holder.
+
+Commercial purposes include, but are not limited to:
+
+- Selling the skill or a modified version of it.
+- Bundling it into a paid product, paid service, SaaS product, consulting deliverable, training product, or commercial workflow.
+- Using it to generate revenue, support a business operation, or provide paid services.
+- Re-licensing, sublicensing, or distributing it as part of a commercial package.
+
+## Redistribution
+
+Redistribution is allowed only for non-commercial learning, exchange, research,
+and experimentation. This license notice must remain included and unmodified.
+
+## Font and Asset Notice
+
+Some bundled font files under `skills/prism/assets/fonts/` are commercial
+copyright fonts. They are included only to preserve the original local skill
+package and to support personal learning, communication, and experimentation.
+
+The bundled fonts are not licensed for commercial use through this repository.
+Anyone who uses these fonts commercially must obtain the proper font licenses
+independently. Any commercial use, infringement, license violation, or legal
+responsibility caused by use of the bundled fonts is solely the responsibility of
+the user.
+
+## No Warranty
+
+This software and its bundled materials are provided "as is", without warranty of
+any kind. The authors and copyright holders are not liable for claims, damages,
+losses, or legal responsibilities arising from use, misuse, commercial use,
+redistribution, or font licensing violations by users.
+

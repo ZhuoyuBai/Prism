@@ -1,0 +1,2216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>流程动画结构库 — 全类型展示</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f3;
+    color: #1a1a1a;
+    padding: 40px 20px;
+  }
+  .page-title { text-align: center; font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .page-sub { text-align: center; font-size: 14px; color: #888; margin-bottom: 40px; }
+
+  /* Section layout */
+  .section {
+    max-width: 720px;
+    margin: 0 auto 36px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 6px 20px rgba(0,0,0,0.03);
+    padding: 28px 32px;
+  }
+  .section-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .section-tag {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .tag-linear { background: #e8f0fe; color: #1B365D; }
+  .tag-parallel { background: #e8f5e9; color: #2e7d32; }
+  .tag-branch { background: #fef3e2; color: #c0713a; }
+  .tag-loop { background: #f3e5f5; color: #7b1fa2; }
+  .tag-nested { background: #fce4ec; color: #c62828; }
+  .tag-interactive { background: #e0f2f1; color: #00695c; }
+  .tag-purple { background: #f3e8ff; color: #7c3aed; }
+  .tag-teal { background: #e0f7fa; color: #00796b; }
+  .tag-orange { background: #fff3e0; color: #e65100; }
+  .tag-blue { background: #e3f2fd; color: #1565c0; }
+  .tag-green { background: #e8f5e9; color: #2e7d32; }
+  .tag-red { background: #ffebee; color: #c62828; }
+  .section-title { font-size: 15px; font-weight: 600; }
+  .section-desc { font-size: 12px; color: #999; margin-bottom: 18px; }
+
+  .flow-svg { width: 100%; height: auto; display: block; }
+
+  /* Node base */
+  .n-rect { rx: 10; transition: all 0.2s ease; cursor: pointer; }
+  .n-rect:hover { filter: drop-shadow(0 3px 8px rgba(27,54,93,0.15)); }
+  .n-title { font-size: 12px; font-weight: 600; fill: #fff; font-family: inherit; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .n-desc { font-size: 10px; fill: rgba(255,255,255,0.8); font-family: inherit; text-anchor: middle; pointer-events: none; }
+  .n-body-text { font-size: 11px; fill: #555; font-family: inherit; text-anchor: middle; }
+
+  /* Connector */
+  .conn { fill: none; stroke: #b0b8c4; stroke-width: 1.5; stroke-linecap: round; }
+  .conn-anim { fill: none; stroke: #1B365D; stroke-width: 1.5; stroke-linecap: round; stroke-dasharray: 6 4; animation: flowDash 1s linear infinite; }
+  .conn-label { font-size: 9px; fill: #999; font-family: inherit; text-anchor: middle; }
+
+  /* Arrow marker */
+  .arrow-fill { fill: #b0b8c4; }
+  .arrow-fill-dark { fill: #1B365D; }
+
+  /* Step pill */
+  .step-pill { fill: #1B365D; rx: 8; }
+  .step-num { font-size: 10px; fill: #fff; font-weight: 700; font-family: inherit; text-anchor: middle; dominant-baseline: central; }
+
+  /* Detail panel */
+  .detail-panel {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: #f8f9fb;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: #555;
+    min-height: 48px;
+    transition: all 0.3s ease;
+  }
+  .detail-panel strong { color: #1B365D; }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+  }
+  .ctrl-btn {
+    padding: 7px 14px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 7px;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 500;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .ctrl-btn:hover { border-color: #1B365D; color: #1B365D; }
+  .ctrl-btn.active { border-color: #1B365D; background: #1B365D; color: #fff; }
+
+  @keyframes flowDash { to { stroke-dashoffset: -20; } }
+  @keyframes fadeIn { to { opacity: 1; } }
+  @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.5; } }
+
+  /* State machine circle nodes */
+  .sm-circle { transition: all 0.2s ease; cursor: pointer; }
+  .sm-circle:hover { filter: drop-shadow(0 3px 8px rgba(27,54,93,0.2)); }
+  .sm-label { font-size: 11px; fill: #fff; font-weight: 600; font-family: inherit; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+  .sm-sub { font-size: 9px; fill: rgba(255,255,255,0.7); font-family: inherit; text-anchor: middle; pointer-events: none; }
+
+  /* Self-loop arc */
+  .self-loop { fill: none; stroke: #b0b8c4; stroke-width: 1.5; }
+  .self-loop-anim { fill: none; stroke: #7c3aed; stroke-width: 1.5; stroke-dasharray: 5 3; animation: flowDash 1s linear infinite; }
+
+  /* Transition label */
+  .trans-label { font-size: 9px; fill: #666; font-family: inherit; text-anchor: middle; }
+
+  /* Data flow: variable-width arrows */
+  .df-arrow-thick { fill: none; stroke: #00796b; stroke-width: 3; stroke-linecap: round; opacity: 0.6; }
+  .df-arrow-thin { fill: none; stroke: #00796b; stroke-width: 1.2; stroke-linecap: round; opacity: 0.4; }
+
+  /* ER diagram */
+  .er-table-header { font-size: 11px; fill: #fff; font-weight: 700; font-family: inherit; text-anchor: middle; dominant-baseline: central; }
+  .er-field { font-size: 10px; fill: #444; font-family: inherit; dominant-baseline: central; }
+  .er-pk { font-size: 9px; fill: #e65100; font-weight: 700; font-family: inherit; dominant-baseline: central; }
+  .er-line { fill: none; stroke: #b0b8c4; stroke-width: 1.5; }
+  .er-line-anim { fill: none; stroke: #e65100; stroke-width: 1.5; stroke-dasharray: 5 3; animation: flowDash 1s linear infinite; }
+  .er-card { font-size: 9px; fill: #e65100; font-weight: 700; font-family: inherit; text-anchor: middle; dominant-baseline: central; }
+
+  /* Gantt bars */
+  .gantt-bar { rx: 5; cursor: pointer; transition: all 0.2s ease; }
+  .gantt-bar:hover { filter: brightness(1.1); }
+  .gantt-label { font-size: 10px; fill: #fff; font-weight: 600; font-family: inherit; dominant-baseline: central; }
+  .gantt-task { font-size: 11px; fill: #333; font-family: inherit; text-anchor: end; dominant-baseline: central; }
+  .gantt-grid { stroke: #eee; stroke-width: 1; }
+  .gantt-tick { font-size: 9px; fill: #999; font-family: inherit; text-anchor: middle; }
+
+  /* Swimlane */
+  .lane-bg { fill: #fafafa; stroke: #e0e0e0; stroke-width: 1; }
+  .lane-header { font-size: 11px; fill: #1B365D; font-weight: 700; font-family: inherit; text-anchor: middle; dominant-baseline: central; }
+  .lane-node { rx: 8; cursor: pointer; transition: all 0.2s ease; }
+  .lane-node:hover { filter: drop-shadow(0 2px 6px rgba(27,54,93,0.2)); }
+
+  /* Sequence diagram */
+  .seq-lifeline { stroke: #b0b8c4; stroke-width: 1; stroke-dasharray: 4 3; }
+  .seq-obj-header { rx: 6; }
+  .seq-obj-label { font-size: 11px; fill: #fff; font-weight: 600; font-family: inherit; text-anchor: middle; dominant-baseline: central; }
+  .seq-msg { fill: none; stroke: #1B365D; stroke-width: 1.5; marker-end: url(#ah-seq); }
+  .seq-msg-anim { fill: none; stroke: #c62828; stroke-width: 1.5; stroke-dasharray: 5 3; animation: flowDash 0.8s linear infinite; }
+  .seq-msg-label { font-size: 9px; fill: #555; font-family: inherit; text-anchor: middle; }
+  .seq-return { stroke: #999; stroke-width: 1; stroke-dasharray: 4 3; marker-end: url(#ah-seq-gray); }
+  .seq-activation { fill: #f0f4f8; stroke: #b0b8c4; stroke-width: 1; }
+
+  /* Gantt tooltip */
+  .gantt-tooltip {
+    position: absolute;
+    background: #1B365D;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .conn-anim { animation: none; stroke-dasharray: none; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<h1 class="page-title">流程动画结构库</h1>
+<p class="page-sub">35种核心流程结构 — 点击节点查看详情</p>
+
+<!-- ===== 1. 线性流程 ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-linear">Linear</span>
+    <span class="section-title">线性流程</span>
+  </div>
+  <p class="section-desc">单向串联，适合步骤明确的顺序流程</p>
+  <svg class="flow-svg" viewBox="0 0 660 80">
+    <defs>
+      <marker id="ah1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- Nodes -->
+    <rect class="n-rect" x="10" y="15" width="88" height="50" fill="#1B365D"/>
+    <text class="n-title" x="54" y="36">输入数据</text>
+    <text class="n-desc" x="54" y="52">原始采集</text>
+
+    <rect class="n-rect" x="138" y="15" width="88" height="50" fill="#2a5580"/>
+    <text class="n-title" x="182" y="36">清洗处理</text>
+    <text class="n-desc" x="182" y="52">去噪标准化</text>
+
+    <rect class="n-rect" x="266" y="15" width="88" height="50" fill="#1B365D"/>
+    <text class="n-title" x="310" y="36">特征提取</text>
+    <text class="n-desc" x="310" y="52">降维映射</text>
+
+    <rect class="n-rect" x="394" y="15" width="88" height="50" fill="#2a5580"/>
+    <text class="n-title" x="438" y="36">模型训练</text>
+    <text class="n-desc" x="438" y="52">迭代优化</text>
+
+    <rect class="n-rect" x="522" y="15" width="88" height="50" fill="#1B365D"/>
+    <text class="n-title" x="566" y="36">输出结果</text>
+    <text class="n-desc" x="566" y="52">预测推理</text>
+
+    <!-- Connectors -->
+    <line class="conn" x1="100" y1="40" x2="136" y2="40" marker-end="url(#ah1)"/>
+    <line class="conn-anim" x1="100" y1="40" x2="136" y2="40"/>
+    <line class="conn" x1="228" y1="40" x2="264" y2="40" marker-end="url(#ah1)"/>
+    <line class="conn-anim" x1="228" y1="40" x2="264" y2="40"/>
+    <line class="conn" x1="356" y1="40" x2="392" y2="40" marker-end="url(#ah1)"/>
+    <line class="conn-anim" x1="356" y1="40" x2="392" y2="40"/>
+    <line class="conn" x1="484" y1="40" x2="520" y2="40" marker-end="url(#ah1)"/>
+    <line class="conn-anim" x1="484" y1="40" x2="520" y2="40"/>
+  </svg>
+</div>
+
+<!-- ===== 2. 并行流程 ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-parallel">Parallel</span>
+    <span class="section-title">并行流程</span>
+  </div>
+  <p class="section-desc">多路同时执行后汇聚，适合独立子任务并行处理</p>
+  <svg class="flow-svg" viewBox="0 0 660 150">
+    <defs>
+      <marker id="ah2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- Start -->
+    <rect class="n-rect" x="10" y="50" width="88" height="50" fill="#1B365D"/>
+    <text class="n-title" x="54" y="71">任务分发</text>
+    <text class="n-desc" x="54" y="87">调度器</text>
+
+    <!-- Fork lines -->
+    <path class="conn" d="M100,65 L140,65 L140,30 L180,30" marker-end="url(#ah2)"/>
+    <path class="conn" d="M100,75 L140,75 L140,75 L180,75" marker-end="url(#ah2)"/>
+    <path class="conn" d="M100,85 L140,85 L140,120 L180,120" marker-end="url(#ah2)"/>
+    <path class="conn-anim" d="M100,65 L140,65 L140,30 L180,30"/>
+    <path class="conn-anim" d="M100,75 L140,75 L140,75 L180,75"/>
+    <path class="conn-anim" d="M100,85 L140,85 L140,120 L180,120"/>
+
+    <!-- Parallel branches -->
+    <rect class="n-rect" x="182" y="5" width="100" height="50" fill="#2e7d32"/>
+    <text class="n-title" x="232" y="26">分支 A</text>
+    <text class="n-desc" x="232" y="42">数据预处理</text>
+
+    <rect class="n-rect" x="182" y="50" width="100" height="50" fill="#2e7d32"/>
+    <text class="n-title" x="232" y="71">分支 B</text>
+    <text class="n-desc" x="232" y="87">特征计算</text>
+
+    <rect class="n-rect" x="182" y="95" width="100" height="50" fill="#2e7d32"/>
+    <text class="n-title" x="232" y="116">分支 C</text>
+    <text class="n-desc" x="232" y="132">模型初始化</text>
+
+    <!-- Join lines -->
+    <path class="conn" d="M284,30 L320,30 L320,65 L370,65" marker-end="url(#ah2)"/>
+    <path class="conn" d="M284,75 L320,75 L320,75 L370,75" marker-end="url(#ah2)"/>
+    <path class="conn" d="M284,120 L320,120 L320,85 L370,85" marker-end="url(#ah2)"/>
+    <path class="conn-anim" d="M284,30 L320,30 L320,65 L370,65"/>
+    <path class="conn-anim" d="M284,75 L320,75 L320,75 L370,75"/>
+    <path class="conn-anim" d="M284,120 L320,120 L320,85 L370,85"/>
+
+    <!-- Merge node -->
+    <rect class="n-rect" x="372" y="50" width="88" height="50" fill="#1B365D"/>
+    <text class="n-title" x="416" y="71">结果合并</text>
+    <text class="n-desc" x="416" y="87">聚合输出</text>
+
+    <!-- End -->
+    <line class="conn" x1="462" y1="75" x2="510" y2="75" marker-end="url(#ah2)"/>
+    <line class="conn-anim" x1="462" y1="75" x2="510" y2="75"/>
+    <rect class="n-rect" x="512" y="50" width="88" height="50" fill="#1B365D"/>
+    <text class="n-title" x="556" y="71">最终输出</text>
+    <text class="n-desc" x="556" y="87">交付结果</text>
+
+    <!-- Labels -->
+    <text class="conn-label" x="140" y="22">fork</text>
+    <text class="conn-label" x="320" y="22">join</text>
+  </svg>
+</div>
+
+<!-- ===== 3. 条件分支 ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-branch">Branch</span>
+    <span class="section-title">条件分支</span>
+  </div>
+  <p class="section-desc">根据条件走不同路径，适合判断逻辑</p>
+  <svg class="flow-svg" viewBox="0 0 660 160">
+    <defs>
+      <marker id="ah3" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- Input -->
+    <rect class="n-rect" x="10" y="55" width="80" height="50" fill="#1B365D"/>
+    <text class="n-title" x="50" y="76">接收请求</text>
+    <text class="n-desc" x="50" y="92">API入口</text>
+
+    <line class="conn" x1="92" y1="80" x2="140" y2="80" marker-end="url(#ah3)"/>
+    <line class="conn-anim" x1="92" y1="80" x2="140" y2="80"/>
+
+    <!-- Decision diamond -->
+    <polygon points="195,40 250,80 195,120 140,80" fill="#fef3e2" stroke="#c0713a" stroke-width="1.5"/>
+    <text x="195" y="76" font-size="11" font-weight="600" fill="#c0713a" text-anchor="middle" font-family="inherit">已登录？</text>
+    <text x="195" y="90" font-size="9" fill="#c0713a" text-anchor="middle" font-family="inherit">检查Token</text>
+
+    <!-- Yes path -->
+    <line class="conn" x1="250" y1="80" x2="300" y2="80" marker-end="url(#ah3)"/>
+    <line class="conn-anim" x1="250" y1="80" x2="300" y2="80"/>
+    <text x="275" y="73" font-size="9" fill="#2e7d32" font-weight="600" text-anchor="middle" font-family="inherit">是</text>
+
+    <rect class="n-rect" x="302" y="55" width="100" height="50" fill="#2e7d32"/>
+    <text class="n-title" x="352" y="76">返回数据</text>
+    <text class="n-desc" x="352" y="92">200 OK</text>
+
+    <!-- No path -->
+    <path class="conn" d="M195,120 L195,140 L352,140 L352,120" marker-end="url(#ah3)"/>
+    <path class="conn-anim" d="M195,120 L195,140 L352,140 L352,120"/>
+    <text x="195" y="154" font-size="9" fill="#c62828" font-weight="600" font-family="inherit">否</text>
+
+    <rect class="n-rect" x="302" y="105" width="100" height="50" fill="#c62828"/>
+    <text class="n-title" x="352" y="126">返回错误</text>
+    <text class="n-desc" x="352" y="142">401 未授权</text>
+
+    <!-- Continue from success -->
+    <line class="conn" x1="404" y1="80" x2="450" y2="80" marker-end="url(#ah3)"/>
+    <line class="conn-anim" x1="404" y1="80" x2="450" y2="80"/>
+    <rect class="n-rect" x="452" y="55" width="88" height="50" fill="#1B365D"/>
+    <text class="n-title" x="496" y="76">记录日志</text>
+    <text class="n-desc" x="496" y="92">异步写入</text>
+  </svg>
+</div>
+
+<!-- ===== 4. 循环流程 ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-loop">Loop</span>
+    <span class="section-title">循环流程</span>
+  </div>
+  <p class="section-desc">重复执行直到满足条件，适合迭代优化场景</p>
+  <svg class="flow-svg" viewBox="0 0 660 140">
+    <defs>
+      <marker id="ah4" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- Init -->
+    <rect class="n-rect" x="10" y="45" width="80" height="50" fill="#1B365D"/>
+    <text class="n-title" x="50" y="66">初始化</text>
+    <text class="n-desc" x="50" y="82">epoch=0</text>
+
+    <line class="conn" x1="92" y1="70" x2="140" y2="70" marker-end="url(#ah4)"/>
+    <line class="conn-anim" x1="92" y1="70" x2="140" y2="70"/>
+
+    <!-- Loop body -->
+    <rect class="n-rect" x="142" y="45" width="100" height="50" fill="#7b1fa2"/>
+    <text class="n-title" x="192" y="66">训练一轮</text>
+    <text class="n-desc" x="192" y="82">前向+反向</text>
+
+    <line class="conn" x1="244" y1="70" x2="295" y2="70" marker-end="url(#ah4)"/>
+    <line class="conn-anim" x1="244" y1="70" x2="295" y2="70"/>
+
+    <!-- Check -->
+    <polygon points="350,30 405,70 350,110 295,70" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1.5"/>
+    <text x="350" y="66" font-size="10" font-weight="600" fill="#7b1fa2" text-anchor="middle" font-family="inherit">收敛？</text>
+    <text x="350" y="80" font-size="9" fill="#7b1fa2" text-anchor="middle" font-family="inherit">loss &lt; 0.01</text>
+
+    <!-- No → back to loop -->
+    <path class="conn" d="M350,110 L350,125 L192,125 L192,97" marker-end="url(#ah4)"/>
+    <path class="conn-anim" d="M350,110 L350,125 L192,125 L192,97"/>
+    <text x="270" y="120" font-size="9" fill="#c62828" font-weight="600" font-family="inherit">否 → 继续迭代</text>
+
+    <!-- Yes → output -->
+    <line class="conn" x1="405" y1="70" x2="460" y2="70" marker-end="url(#ah4)"/>
+    <line class="conn-anim" x1="405" y1="70" x2="460" y2="70"/>
+    <text x="432" y="63" font-size="9" fill="#2e7d32" font-weight="600" text-anchor="middle" font-family="inherit">是</text>
+
+    <rect class="n-rect" x="462" y="45" width="88" height="50" fill="#1B365D"/>
+    <text class="n-title" x="506" y="66">输出模型</text>
+    <text class="n-desc" x="506" y="82">保存权重</text>
+
+    <!-- Loop counter badge -->
+    <g transform="translate(165,20)">
+      <rect width="54" height="18" rx="9" fill="#7b1fa2" opacity="0.15"/>
+      <text x="27" y="13" font-size="9" fill="#7b1fa2" font-weight="600" text-anchor="middle" font-family="inherit">×N 次</text>
+    </g>
+  </svg>
+</div>
+
+<!-- ===== 5. 嵌套/层级 ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-nested">Nested</span>
+    <span class="section-title">嵌套层级</span>
+  </div>
+  <p class="section-desc">外层流程包含内层子流程，适合复杂系统的分层展示</p>
+  <svg class="flow-svg" viewBox="0 0 660 180">
+    <defs>
+      <marker id="ah5" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- Outer flow -->
+    <rect class="n-rect" x="10" y="65" width="76" height="50" fill="#1B365D"/>
+    <text class="n-title" x="48" y="86">入口</text>
+    <text class="n-desc" x="48" y="102">开始</text>
+
+    <line class="conn" x1="88" y1="90" x2="115" y2="90" marker-end="url(#ah5)"/>
+    <line class="conn-anim" x1="88" y1="90" x2="115" y2="90"/>
+
+    <!-- Nested container -->
+    <rect x="117" y="10" width="380" height="160" rx="12" fill="none" stroke="#e0e0e0" stroke-width="1.5" stroke-dasharray="6 3"/>
+    <text x="130" y="28" font-size="10" fill="#bbb" font-weight="600" font-family="inherit">子流程：数据处理管线</text>
+
+    <!-- Inner linear flow -->
+    <rect class="n-rect" x="130" y="60" width="72" height="44" fill="#3a6b9f"/>
+    <text class="n-title" x="166" y="78">解析</text>
+    <text class="n-desc" x="166" y="93">JSON→对象</text>
+
+    <line class="conn" x1="204" y1="82" x2="224" y2="82" marker-end="url(#ah5)"/>
+    <line class="conn-anim" x1="204" y1="82" x2="224" y2="82"/>
+
+    <rect class="n-rect" x="226" y="60" width="72" height="44" fill="#3a6b9f"/>
+    <text class="n-title" x="262" y="78">校验</text>
+    <text class="n-desc" x="262" y="93">Schema</text>
+
+    <line class="conn" x1="300" y1="82" x2="320" y2="82" marker-end="url(#ah5)"/>
+    <line class="conn-anim" x1="300" y1="82" x2="320" y2="82"/>
+
+    <rect class="n-rect" x="322" y="60" width="72" height="44" fill="#3a6b9f"/>
+    <text class="n-title" x="358" y="78">转换</text>
+    <text class="n-desc" x="358" y="93">映射输出</text>
+
+    <line class="conn" x1="396" y1="82" x2="416" y2="82" marker-end="url(#ah5)"/>
+    <line class="conn-anim" x1="396" y1="82" x2="416" y2="82"/>
+
+    <rect class="n-rect" x="418" y="60" width="68" height="44" fill="#3a6b9f"/>
+    <text class="n-title" x="452" y="78">存储</text>
+    <text class="n-desc" x="452" y="93">写入DB</text>
+
+    <!-- Inner detail -->
+    <rect x="130" y="115" width="355" height="40" rx="8" fill="#f8f9fb"/>
+    <text x="145" y="134" font-size="10" fill="#888" font-family="inherit">每步可独立配置错误处理、重试策略、超时时间</text>
+    <text x="145" y="148" font-size="10" fill="#aaa" font-family="inherit">支持断点续传和并行子任务</text>
+
+    <!-- Exit outer -->
+    <line class="conn" x1="499" y1="90" x2="530" y2="90" marker-end="url(#ah5)"/>
+    <line class="conn-anim" x1="499" y1="90" x2="530" y2="90"/>
+    <rect class="n-rect" x="532" y="65" width="76" height="50" fill="#1B365D"/>
+    <text class="n-title" x="570" y="86">出口</text>
+    <text class="n-desc" x="570" y="102">完成</text>
+  </svg>
+</div>
+
+<!-- ===== 6. 交互式流程（合并原交互流程图） ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-interactive">Interactive</span>
+    <span class="section-title">交互式流程</span>
+  </div>
+  <p class="section-desc">支持点击节点查看详细信息，适合教学讲解</p>
+
+  <svg class="flow-svg" viewBox="0 0 660 120">
+    <defs>
+      <marker id="ah6" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill-dark" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+
+    <!-- Nodes with click handlers -->
+    <g class="clickable-node" data-id="1" onclick="selectNode(1)">
+      <rect class="n-rect" x="10" y="30" width="95" height="60" fill="#1B365D" stroke="transparent" stroke-width="2"/>
+      <text class="n-title" x="57" y="52">📥 输入</text>
+      <text class="n-desc" x="57" y="72">用户请求</text>
+      <circle cx="107" cy="60" r="4" fill="#fff" stroke="#1B365D" stroke-width="1.5"/>
+    </g>
+
+    <line class="conn-anim" x1="107" y1="60" x2="148" y2="60"/>
+
+    <g class="clickable-node" data-id="2" onclick="selectNode(2)">
+      <rect class="n-rect" x="150" y="30" width="95" height="60" fill="#1B365D" stroke="transparent" stroke-width="2"/>
+      <text class="n-title" x="197" y="52">🔍 认证</text>
+      <text class="n-desc" x="197" y="72">校验身份</text>
+      <circle cx="150" cy="60" r="4" fill="#fff" stroke="#1B365D" stroke-width="1.5"/>
+      <circle cx="247" cy="60" r="4" fill="#fff" stroke="#1B365D" stroke-width="1.5"/>
+    </g>
+
+    <line class="conn-anim" x1="247" y1="60" x2="288" y2="60"/>
+
+    <g class="clickable-node" data-id="3" onclick="selectNode(3)">
+      <rect class="n-rect" x="290" y="30" width="95" height="60" fill="#1B365D" stroke="transparent" stroke-width="2"/>
+      <text class="n-title" x="337" y="52">⚡ 处理</text>
+      <text class="n-desc" x="337" y="72">业务逻辑</text>
+      <circle cx="290" cy="60" r="4" fill="#fff" stroke="#1B365D" stroke-width="1.5"/>
+      <circle cx="387" cy="60" r="4" fill="#fff" stroke="#1B365D" stroke-width="1.5"/>
+    </g>
+
+    <line class="conn-anim" x1="387" y1="60" x2="428" y2="60"/>
+
+    <g class="clickable-node" data-id="4" onclick="selectNode(4)">
+      <rect class="n-rect" x="430" y="30" width="95" height="60" fill="#1B365D" stroke="transparent" stroke-width="2"/>
+      <text class="n-title" x="477" y="52">💾 存储</text>
+      <text class="n-desc" x="477" y="72">持久化</text>
+      <circle cx="430" cy="60" r="4" fill="#fff" stroke="#1B365D" stroke-width="1.5"/>
+      <circle cx="527" cy="60" r="4" fill="#fff" stroke="#1B365D" stroke-width="1.5"/>
+    </g>
+
+    <line class="conn-anim" x1="527" y1="60" x2="568" y2="60"/>
+
+    <g class="clickable-node" data-id="5" onclick="selectNode(5)">
+      <rect class="n-rect" x="570" y="30" width="80" height="60" fill="#1B365D" stroke="transparent" stroke-width="2"/>
+      <text class="n-title" x="610" y="52">📤 输出</text>
+      <text class="n-desc" x="610" y="72">响应</text>
+      <circle cx="570" cy="60" r="4" fill="#fff" stroke="#1B365D" stroke-width="1.5"/>
+    </g>
+  </svg>
+
+  <div class="controls">
+    <button class="ctrl-btn" onclick="selectNode(1)">1. 输入</button>
+    <button class="ctrl-btn" onclick="selectNode(2)">2. 认证</button>
+    <button class="ctrl-btn" onclick="selectNode(3)">3. 处理</button>
+    <button class="ctrl-btn" onclick="selectNode(4)">4. 存储</button>
+    <button class="ctrl-btn" onclick="selectNode(5)">5. 输出</button>
+  </div>
+
+  <div class="detail-panel" id="detailPanel">
+    <strong>点击任意节点</strong>查看该步骤的详细处理逻辑
+  </div>
+</div>
+
+<script>
+const nodeDetails = {
+  1: '<strong>输入层：</strong>接收 HTTP 请求，解析 header、query params、body。支持 JSON / form-data / multipart。限流中间件在此拦截异常流量（令牌桶算法，100 req/s）。',
+  2: '<strong>认证层：</strong>JWT Token 校验 → Session 查询 → OAuth2 第三方验证。三种方式互为 fallback。Token 过期自动刷新，恶意请求直接 403。',
+  3: '<strong>处理层：</strong>路由匹配 → 参数校验（Zod Schema）→ 业务逻辑执行。支持事务、幂等性保证。超时熔断：单次 5s，批量 30s。',
+  4: '<strong>存储层：</strong>主从分离写入，Redis 缓存热数据（TTL 5min）。支持乐观锁并发控制，写入失败自动重试 3 次。',
+  5: '<strong>输出层：</strong>序列化响应（JSON / Protobuf 自动协商），压缩传输（gzip / br），CORS 头注入，ETag 缓存标识。'
+};
+
+function selectNode(id) {
+  document.querySelectorAll('.clickable-node rect').forEach(r => {
+    r.setAttribute('stroke', 'transparent');
+    r.setAttribute('stroke-width', '2');
+  });
+  const node = document.querySelector(`.clickable-node[data-id="${id}"] rect`);
+  node.setAttribute('stroke', '#1B365D');
+  node.setAttribute('stroke-width', '3');
+
+  document.querySelectorAll('.ctrl-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === id - 1);
+  });
+
+  const panel = document.getElementById('detailPanel');
+  panel.style.opacity = '0';
+  setTimeout(() => {
+    panel.innerHTML = nodeDetails[id];
+    panel.style.opacity = '1';
+  }, 150);
+}
+</script>
+
+<style>
+.clickable-node { cursor: pointer; }
+.clickable-node:hover rect { filter: drop-shadow(0 3px 8px rgba(27,54,93,0.2)); }
+.detail-panel { transition: opacity 0.2s ease; }
+</style>
+<!-- ===== 7. 状态机 State Machine ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-blue">UML</span>
+    <span class="section-title">状态机 State Machine</span>
+  </div>
+  <p class="section-desc">定义对象状态转换规则，适合订单状态、工作流引擎等有明确状态变化的场景</p>
+  <svg class="flow-svg" viewBox="0 0 660 200">
+    <defs>
+      <marker id="ah7a" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 初始状态 -->
+    <circle cx="60" cy="60" r="8" fill="#1B365D"/>
+    <line class="conn" x1="70" y1="60" x2="115" y2="60" marker-end="url(#ah7a)"/>
+    <line class="conn-anim" x1="70" y1="60" x2="115" y2="60"/>
+    <text x="92" y="50" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">进入</text>
+    <!-- 运行中 -->
+    <circle cx="160" cy="60" r="30" fill="#1565c0" class="sm-circle"/>
+    <text class="sm-label" x="160" y="56">运行中</text>
+    <text class="sm-sub" x="160" y="71">处理请求</text>
+    <!-- 运行中自环 -->
+    <path class="self-loop" d="M185,40 Q215,20 190,30"/>
+    <path class="self-loop-anim" d="M185,40 Q215,20 190,30"/>
+    <text class="trans-label" x="212" y="22">retry</text>
+    <!-- 运行中→成功 -->
+    <line class="conn" x1="192" y1="60" x2="270" y2="60" marker-end="url(#ah7a)"/>
+    <line class="conn-anim" x1="192" y1="60" x2="270" y2="60"/>
+    <text class="trans-label" x="231" y="50">onSuccess</text>
+    <circle cx="305" cy="60" r="30" fill="#2e7d32" class="sm-circle"/>
+    <text class="sm-label" x="305" y="56">成功</text>
+    <text class="sm-sub" x="305" y="71">200 OK</text>
+    <!-- 运行中→失败 -->
+    <line class="conn" x1="160" y1="90" x2="160" y2="140" marker-end="url(#ah7a)"/>
+    <line class="conn-anim" x1="160" y1="90" x2="160" y2="140"/>
+    <text class="trans-label" x="148" y="118">onError</text>
+    <circle cx="160" cy="170" r="30" fill="#c62828" class="sm-circle"/>
+    <text class="sm-label" x="160" y="166">失败</text>
+    <text class="sm-sub" x="160" y="181">500 Error</text>
+    <!-- 失败自环 -->
+    <path class="self-loop" d="M135,155 Q105,135 130,145"/>
+    <path class="self-loop-anim" d="M135,155 Q105,135 130,145"/>
+    <text class="trans-label" x="98" y="132">recover</text>
+    <!-- 失败→运行中 -->
+    <line class="conn" x1="188" y1="170" x2="260" y2="170" marker-end="url(#ah7a)"/>
+    <line class="conn-anim" x1="188" y1="170" x2="260" y2="170"/>
+    <text class="trans-label" x="235" y="162">重试</text>
+    <circle cx="295" cy="170" r="30" fill="#7c3aed" class="sm-circle"/>
+    <text class="sm-label" x="295" y="166">重试中</text>
+    <text class="sm-sub" x="295" y="181">延迟队列</text>
+    <!-- 重试中→运行中 -->
+    <line class="conn" x1="295" y1="138" x2="295" y2="92" marker-end="url(#ah7a)"/>
+    <line class="conn-anim" x1="295" y1="138" x2="295" y2="92"/>
+    <text class="trans-label" x="305" y="115">dispatch</text>
+  </svg>
+</div>
+
+<!-- ===== 8. 时序图 Sequence Diagram ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-blue">UML</span>
+    <span class="section-title">时序图 Sequence Diagram</span>
+  </div>
+  <p class="section-desc">展示对象间消息传递的时间顺序，适合API调用链、微服务交互分析</p>
+  <svg class="flow-svg" viewBox="0 0 660 260">
+    <defs>
+      <marker id="ah8" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+      <marker id="ah8o" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon fill="#999" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 生命线 -->
+    <line class="seq-lifeline" x1="120" y1="65" x2="120" y2="250"/>
+    <line class="seq-lifeline" x1="330" y1="65" x2="330" y2="250"/>
+    <line class="seq-lifeline" x1="540" y1="65" x2="540" y2="250"/>
+    <!-- 对象头 -->
+    <rect class="seq-obj-header" x="80" y="25" width="80" height="40" fill="#1565c0"/>
+    <text class="seq-obj-label" x="120" y="49">客户端</text>
+    <rect class="seq-obj-header" x="290" y="25" width="80" height="40" fill="#1565c0"/>
+    <text class="seq-obj-label" x="330" y="49">服务端</text>
+    <rect class="seq-obj-header" x="500" y="25" width="80" height="40" fill="#1565c0"/>
+    <text class="seq-obj-label" x="540" y="49">数据库</text>
+    <!-- 消息1: 客户端→服务端 -->
+    <line class="seq-msg" x1="120" y1="85" x2="328" y2="85"/>
+    <line class="seq-msg-anim" x1="120" y1="85" x2="328" y2="85"/>
+    <text class="seq-msg-label" x="224" y="78">POST /api/login</text>
+    <!-- 激活矩形 服务端 -->
+    <rect class="seq-activation" x="320" y="85" width="20" height="60" rx="3"/>
+    <!-- 消息2: 服务端→数据库 -->
+    <line class="seq-msg" x1="340" y1="105" x2="538" y2="105"/>
+    <line class="seq-msg-anim" x1="340" y1="105" x2="538" y2="105"/>
+    <text class="seq-msg-label" x="439" y="98">SELECT user</text>
+    <!-- 激活矩形 数据库 -->
+    <rect class="seq-activation" x="530" y="105" width="20" height="30" rx="3"/>
+    <!-- 返回: 数据库→服务端 (虚线) -->
+    <line class="seq-return" x1="540" y1="135" x2="342" y2="135"/>
+    <text class="seq-msg-label" x="441" y="145">rows</text>
+    <!-- 消息3: 服务端→数据库 -->
+    <line class="seq-msg" x1="340" y1="160" x2="538" y2="160"/>
+    <line class="seq-msg-anim" x1="340" y1="160" x2="538" y2="160"/>
+    <text class="seq-msg-label" x="439" y="153">INSERT session</text>
+    <rect class="seq-activation" x="530" y="160" width="20" height="25" rx="3"/>
+    <line class="seq-return" x1="540" y1="185" x2="342" y2="185"/>
+    <text class="seq-msg-label" x="441" y="195">ok</text>
+    <!-- 返回: 服务端→客户端 -->
+    <line class="seq-return" x1="330" y1="210" x2="122" y2="210"/>
+    <text class="seq-msg-label" x="226" y="220">200 + token</text>
+  </svg>
+</div>
+
+<!-- ===== 9. 类图 Class Diagram ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-blue">UML</span>
+    <span class="section-title">类图 Class Diagram</span>
+  </div>
+  <p class="section-desc">展示类的属性、方法和类间关系，适合面向对象设计、数据库建模</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <defs>
+      <marker id="ah9" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+        <polygon fill="none" stroke="#b0b8c4" stroke-width="1.5" points="0 0, 10 3.5, 0 7"/>
+      </marker>
+      <marker id="ah9anim" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+        <polygon fill="none" stroke="#c62828" stroke-width="1.5" points="0 0, 10 3.5, 0 7"/>
+      </marker>
+    </defs>
+    <!-- 类: User -->
+    <g transform="translate(30,20)">
+      <rect x="0" y="0" width="160" height="30" fill="#1565c0" rx="4"/>
+      <text class="seq-obj-label" x="80" y="20">User</text>
+      <rect x="0" y="30" width="160" height="60" fill="none" stroke="#1565c0" stroke-width="1.5"/>
+      <text class="er-field" x="8" y="50">- id: Long (PK)</text>
+      <text class="er-field" x="8" y="65">- name: String</text>
+      <text class="er-field" x="8" y="80">- email: String</text>
+      <rect x="0" y="90" width="160" height="50" fill="none" stroke="#1565c0" stroke-width="1.5"/>
+      <text class="er-field" x="8" y="110">+ login(): Token</text>
+      <text class="er-field" x="8" y="125">+ logout(): void</text>
+    </g>
+    <!-- 类: Order -->
+    <g transform="translate(440,20)">
+      <rect x="0" y="0" width="180" height="30" fill="#1565c0" rx="4"/>
+      <text class="seq-obj-label" x="90" y="20">Order</text>
+      <rect x="0" y="30" width="180" height="60" fill="none" stroke="#1565c0" stroke-width="1.5"/>
+      <text class="er-field" x="8" y="50">- orderId: Long (PK)</text>
+      <text class="er-field" x="8" y="65">- userId: Long (FK)</text>
+      <text class="er-field" x="8" y="80">- total: Decimal</text>
+      <rect x="0" y="90" width="180" height="50" fill="none" stroke="#1565c0" stroke-width="1.5"/>
+      <text class="er-field" x="8" y="110">+ create(): Order</text>
+      <text class="er-field" x="8" y="125">+ cancel(): void</text>
+    </g>
+    <!-- 继承线: User → BaseEntity (假设) -->
+    <!-- 关联线: User → Order (1对多) -->
+    <line class="er-line" x1="190" y1="110" x2="438" y2="110" marker-end="url(#ah9)"/>
+    <line class="er-line-anim" x1="190" y1="110" x2="438" y2="110"/>
+    <text class="er-card" x="200" y="103">1</text>
+    <text class="er-card" x="420" y="103">N</text>
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="314" y="103">下订单</text>
+    <!-- 类: Product -->
+    <g transform="translate(230,155)">
+      <rect x="0" y="0" width="160" height="30" fill="#1565c0" rx="4"/>
+      <text class="seq-obj-label" x="80" y="20">Product</text>
+      <rect x="0" y="30" width="160" height="45" fill="none" stroke="#1565c0" stroke-width="1.5"/>
+      <text class="er-field" x="8" y="50">- productId: Long (PK)</text>
+      <text class="er-field" x="8" y="65">- name: String</text>
+      <rect x="0" y="75" width="160" height="35" fill="none" stroke="#1565c0" stroke-width="1.5"/>
+      <text class="er-field" x="8" y="95">+ getPrice(): Decimal</text>
+    </g>
+    <!-- Order → Product 关联线 -->
+    <line class="er-line" x1="530" y1="140" x2="310" y2="175" marker-end="url(#ah9)"/>
+    <line class="er-line-anim" x1="530" y1="140" x2="310" y2="175"/>
+    <text class="er-card" x="500" y="152">N</text>
+    <text class="er-card" x="340" y="167">M</text>
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="440" y="162">包含</text>
+  </svg>
+</div>
+
+<!-- ===== 10. 用例图 Use Case Diagram ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-blue">UML</span>
+    <span class="section-title">用例图 Use Case Diagram</span>
+  </div>
+  <p class="section-desc">描述系统功能边界与参与者交互，适合需求分析、功能范围界定</p>
+  <svg class="flow-svg" viewBox="0 0 660 220">
+    <defs>
+      <marker id="ah10" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 系统边界 -->
+    <rect x="200" y="20" width="400" height="180" rx="16" fill="#f5f7fa" stroke="#1565c0" stroke-width="2"/>
+    <text x="220" y="42" font-size="12" font-weight="700" fill="#1565c0" font-family="inherit">电商系统边界</text>
+    <!-- 用例: 下订单 -->
+    <ellipse cx="310" cy="90" rx="70" ry="24" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="310" y="94" font-size="11" fill="#1565c0" font-weight="600" font-family="inherit" text-anchor="middle">下订单</text>
+    <!-- 用例: 支付 -->
+    <ellipse cx="490" cy="90" rx="60" ry="24" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="490" y="94" font-size="11" fill="#1565c0" font-weight="600" font-family="inherit" text-anchor="middle">在线支付</text>
+    <!-- 用例: 查看订单 -->
+    <ellipse cx="390" cy="155" rx="70" ry="24" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="390" y="159" font-size="11" fill="#1565c0" font-weight="600" font-family="inherit" text-anchor="middle">查看订单</text>
+    <!-- 参与者: 用户 -->
+    <g transform="translate(110,70)">
+      <circle cx="0" cy="-10" r="8" fill="none" stroke="#1565c0" stroke-width="1.5"/>
+      <line x1="0" y1="-2" x2="0" y2="15" stroke="#1565c0" stroke-width="1.5"/>
+      <line x1="-10" y1="8" x2="10" y2="8" stroke="#1565c0" stroke-width="1.5"/>
+      <line x1="0" y1="15" x2="-8" y2="30" stroke="#1565c0" stroke-width="1.5"/>
+      <line x1="0" y1="15" x2="8" y2="30" stroke="#1565c0" stroke-width="1.5"/>
+      <text x="0" y="46" font-size="11" fill="#1565c0" font-weight="600" font-family="inherit" text-anchor="middle">用户</text>
+    </g>
+    <!-- 关联线: 用户→下订单 -->
+    <line class="conn" x1="130" y1="73" x2="238" y2="90" marker-end="url(#ah10)"/>
+    <line class="conn-anim" x1="130" y1="73" x2="238" y2="90"/>
+    <!-- 关联线: 用户→查看订单 -->
+    <line class="conn" x1="130" y1="95" x2="318" y2="155" marker-end="url(#ah10)"/>
+    <line class="conn-anim" x1="130" y1="95" x2="318" y2="155"/>
+    <!-- 用例间关系 -->
+    <line class="conn" x1="380" y1="90" x2="428" y2="90" stroke-dasharray="4 3" marker-end="url(#ah10)"/>
+    <text x="404" y="84" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">&lt;&lt;include&gt;&gt;</text>
+  </svg>
+</div>
+
+<!-- ===== 11. 活动图 Activity Diagram ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-blue">UML</span>
+    <span class="section-title">活动图 Activity Diagram</span>
+  </div>
+  <p class="section-desc">展示业务流程中的活动、决策和并行，适合业务建模、工作流设计</p>
+  <svg class="flow-svg" viewBox="0 0 660 280">
+    <defs>
+      <marker id="ah11" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 开始 -->
+    <circle cx="330" cy="15" r="10" fill="#1565c0"/>
+    <line class="conn" x1="330" y1="25" x2="330" y2="45" marker-end="url(#ah11)"/>
+    <line class="conn-anim" x1="330" y1="25" x2="330" y2="45"/>
+    <!-- 活动: 接收订单 -->
+    <rect class="n-rect" x="270" y="48" width="120" height="44" fill="#1565c0"/>
+    <text class="n-title" x="330" y="66">接收订单</text>
+    <text class="n-desc" x="330" y="80">创建订单记录</text>
+    <!-- 判断: 库存充足? -->
+    <line class="conn" x1="330" y1="92" x2="330" y2="116" marker-end="url(#ah11)"/>
+    <line class="conn-anim" x1="330" y1="92" x2="330" y2="116"/>
+    <polygon points="330,118 380,148 330,178 280,148" fill="#fef3e2" stroke="#c0713a" stroke-width="1.5"/>
+    <text x="330" y="145" font-size="10" font-weight="600" fill="#c0713a" text-anchor="middle" font-family="inherit">库存充足？</text>
+    <!-- Fork: 并行处理 -->
+    <text x="280" y="162" font-size="9" fill="#c62828" font-weight="600" font-family="inherit">否</text>
+    <line class="conn" x1="280" y1="148" x2="130" y2="148" marker-end="url(#ah11)"/>
+    <line class="conn-anim" x1="280" y1="148" x2="130" y2="148"/>
+    <rect class="n-rect" x="70" y="128" width="110" height="40" fill="#c62828"/>
+    <text class="n-title" x="125" y="148">库存不足通知</text>
+    <!-- 是 → 并行 -->
+    <text x="365" y="162" font-size="9" fill="#2e7d32" font-weight="600" font-family="inherit">是</text>
+    <line class="conn" x1="380" y1="148" x2="500" y2="148" marker-end="url(#ah11)"/>
+    <line class="conn-anim" x1="380" y1="148" x2="500" y2="148"/>
+    <rect x="470" y="126" width="16" height="30" fill="#1565c0" rx="3"/>
+    <line class="conn" x1="486" y1="128" x2="580" y2="100" marker-end="url(#ah11)"/>
+    <line class="conn" x1="486" y1="154" x2="580" y2="180" marker-end="url(#ah11)"/>
+    <line class="conn-anim" x1="486" y1="128" x2="580" y2="100"/>
+    <line class="conn-anim" x1="486" y1="154" x2="580" y2="180"/>
+    <!-- 分支A -->
+    <rect class="n-rect" x="550" y="78" width="100" height="44" fill="#1565c0"/>
+    <text class="n-title" x="600" y="96">扣减库存</text>
+    <text class="n-desc" x="600" y="110">原子操作</text>
+    <!-- 分支B -->
+    <rect class="n-rect" x="550" y="158" width="100" height="44" fill="#1565c0"/>
+    <text class="n-title" x="600" y="176">锁定优惠券</text>
+    <text class="n-desc" x="600" y="190">幂等校验</text>
+    <!-- Join -->
+    <line class="conn" x1="600" y1="122" x2="600" y2="216" marker-end="url(#ah11)"/>
+    <line class="conn" x1="600" y1="202" x2="600" y2="216" marker-end="url(#ah11)"/>
+    <line class="conn-anim" x1="600" y1="122" x2="600" y2="216"/>
+    <line class="conn-anim" x1="600" y1="202" x2="600" y2="216"/>
+    <rect x="592" y="216" width="16" height="30" fill="#1565c0" rx="3"/>
+    <line class="conn" x1="600" y1="246" x2="600" y2="256" marker-end="url(#ah11)"/>
+    <line class="conn-anim" x1="600" y1="246" x2="600" y2="256"/>
+    <!-- Fork/Join 标注 -->
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="486" y="122">fork</text>
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="600" y="212">join</text>
+    <!-- 结束 -->
+    <circle cx="600" cy="268" r="10" fill="none" stroke="#1565c0" stroke-width="2.5"/>
+    <circle cx="600" cy="268" r="6" fill="#1565c0"/>
+  </svg>
+</div>
+
+<!-- ===== 12. 组件图 Component Diagram ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-blue">UML</span>
+    <span class="section-title">组件图 Component Diagram</span>
+  </div>
+  <p class="section-desc">展示系统的软件组件及依赖关系，适合架构设计、微服务拆分</p>
+  <svg class="flow-svg" viewBox="0 0 660 220">
+    <defs>
+      <marker id="ah12" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 组件: 订单服务 -->
+    <g transform="translate(30,30)">
+      <rect x="0" y="0" width="170" height="90" rx="6" fill="#f5f7fa" stroke="#1565c0" stroke-width="2"/>
+      <rect x="0" y="0" width="170" height="24" rx="6" fill="#1565c0"/>
+      <text x="85" y="16" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">&lt;&lt;component&gt;&gt;</text>
+      <text x="85" y="48" font-size="13" font-weight="600" fill="#1B365D" font-family="inherit" text-anchor="middle">订单服务</text>
+      <!-- 接口半圆 -->
+      <path d="M170,45 Q185,55 170,65" fill="none" stroke="#1565c0" stroke-width="1.5"/>
+      <circle cx="176" cy="55" r="5" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+    </g>
+    <!-- 组件: 支付服务 -->
+    <g transform="translate(240,30)">
+      <rect x="0" y="0" width="170" height="90" rx="6" fill="#f5f7fa" stroke="#1565c0" stroke-width="2"/>
+      <rect x="0" y="0" width="170" height="24" rx="6" fill="#1565c0"/>
+      <text x="85" y="16" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">&lt;&lt;component&gt;&gt;</text>
+      <text x="85" y="48" font-size="13" font-weight="600" fill="#1B365D" font-family="inherit" text-anchor="middle">支付服务</text>
+      <path d="M170,45 Q185,55 170,65" fill="none" stroke="#1565c0" stroke-width="1.5"/>
+      <circle cx="176" cy="55" r="5" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+    </g>
+    <!-- 组件: 通知服务 -->
+    <g transform="translate(130,140)">
+      <rect x="0" y="0" width="170" height="70" rx="6" fill="#f5f7fa" stroke="#1565c0" stroke-width="2"/>
+      <rect x="0" y="0" width="170" height="24" rx="6" fill="#1565c0"/>
+      <text x="85" y="16" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">&lt;&lt;component&gt;&gt;</text>
+      <text x="85" y="44" font-size="13" font-weight="600" fill="#1B365D" font-family="inherit" text-anchor="middle">通知服务</text>
+    </g>
+    <!-- 依赖线: 订单服务→支付服务(实线) -->
+    <line class="conn" x1="200" y1="85" x2="238" y2="85" marker-end="url(#ah12)"/>
+    <line class="conn-anim" x1="200" y1="85" x2="238" y2="85"/>
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="219" y="78">依赖</text>
+    <!-- 依赖线: 订单服务→通知服务(虚线) -->
+    <line class="conn" x1="115" y1="120" x2="150" y2="138" stroke-dasharray="5 3" marker-end="url(#ah12)"/>
+    <line class="conn-anim" x1="115" y1="120" x2="150" y2="138" stroke-dasharray="5 3"/>
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="145" y="122">订阅</text>
+    <!-- 依赖线: 支付服务→通知服务(虚线) -->
+    <line class="conn" x1="325" y1="120" x2="280" y2="138" stroke-dasharray="5 3" marker-end="url(#ah12)"/>
+    <line class="conn-anim" x1="325" y1="120" x2="280" y2="138" stroke-dasharray="5 3"/>
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="290" y="122">事件</text>
+    <!-- 数据库接口标注 -->
+    <rect x="450" y="50" width="180" height="100" rx="8" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="540" y="72" font-size="11" font-weight="600" fill="#999" font-family="inherit" text-anchor="middle">外部：数据库集群</text>
+    <rect x="475" y="85" width="130" height="40" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+    <text x="540" y="102" font-size="10" fill="#1565c0" font-family="inherit" text-anchor="middle">MySQL</text>
+    <text x="540" y="116" font-size="9" fill="#888" font-family="inherit" text-anchor="middle">订单库</text>
+    <line class="conn" x1="450" y1="100" x2="473" y2="105" stroke-dasharray="4 3"/>
+    <line class="conn-anim" x1="450" y1="100" x2="473" y2="105" stroke-dasharray="4 3"/>
+  </svg>
+</div>
+
+<!-- ===== 13. ER 图 Entity Relationship ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-teal">数据</span>
+    <span class="section-title">ER 图 Entity Relationship</span>
+  </div>
+  <p class="section-desc">展示数据实体、字段及实体间关系，适合数据库设计、数据建模</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <defs/>
+    <!-- 实体: 用户 -->
+    <g transform="translate(30,20)">
+      <rect x="0" y="0" width="180" height="26" fill="#00796b" rx="4"/>
+      <text class="er-table-header" x="90" y="18">用户 (User)</text>
+      <rect x="0" y="26" width="180" height="110" fill="#fff" stroke="#00796b" stroke-width="1.5"/>
+      <text class="er-pk" x="10" y="48">PK</text>
+      <text class="er-field" x="35" y="48">user_id: INT</text>
+      <line x1="10" y1="56" x2="170" y2="56" stroke="#eee" stroke-width="1"/>
+      <text class="er-field" x="10" y="72">nickname: VARCHAR(50)</text>
+      <line x1="10" y1="80" x2="170" y2="80" stroke="#eee" stroke-width="1"/>
+      <text class="er-field" x="10" y="96">email: VARCHAR(100)</text>
+      <line x1="10" y1="104" x2="170" y2="104" stroke="#eee" stroke-width="1"/>
+      <text class="er-field" x="10" y="120">created_at: DATETIME</text>
+    </g>
+    <!-- 实体: 订单 -->
+    <g transform="translate(400,20)">
+      <rect x="0" y="0" width="200" height="26" fill="#00796b" rx="4"/>
+      <text class="er-table-header" x="100" y="18">订单 (Order)</text>
+      <rect x="0" y="26" width="200" height="125" fill="#fff" stroke="#00796b" stroke-width="1.5"/>
+      <text class="er-pk" x="10" y="48">PK</text>
+      <text class="er-field" x="35" y="48">order_id: INT</text>
+      <line x1="10" y1="56" x2="190" y2="56" stroke="#eee" stroke-width="1"/>
+      <text class="er-field" x="10" y="72">user_id: INT</text>
+      <line x1="10" y1="80" x2="190" y2="80" stroke="#eee" stroke-width="1"/>
+      <text class="er-field" x="10" y="96">total: DECIMAL(10,2)</text>
+      <line x1="10" y1="104" x2="190" y2="104" stroke="#eee" stroke-width="1"/>
+      <text class="er-field" x="10" y="120">status: ENUM</text>
+      <line x1="10" y1="128" x2="190" y2="128" stroke="#eee" stroke-width="1"/>
+      <text class="er-field" x="10" y="144">created_at: DATETIME</text>
+    </g>
+    <!-- 关系菱形 -->
+    <polygon points="330,130 380,160 330,190 280,160" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+    <text x="330" y="163" font-size="11" font-weight="600" fill="#e65100" text-anchor="middle" font-family="inherit">下单</text>
+    <!-- 连线: 用户→下单 -->
+    <line class="er-line" x1="210" y1="130" x2="278" y2="160"/>
+    <text class="er-card" x="230" y="122">1</text>
+    <!-- 连线: 下单→订单 -->
+    <line class="er-line" x1="382" y1="160" x2="398" y2="130"/>
+    <line class="er-line-anim" x1="382" y1="160" x2="398" y2="130"/>
+    <text class="er-card" x="385" y="152">N</text>
+    <!-- 实体: 商品 (关联测试) -->
+    <g transform="translate(230,170)">
+      <rect x="0" y="0" width="180" height="26" fill="#00796b" rx="4"/>
+      <text class="er-table-header" x="90" y="18">商品 (Product)</text>
+      <rect x="0" y="26" width="180" height="32" fill="#fff" stroke="#00796b" stroke-width="1.5"/>
+      <text class="er-pk" x="10" y="28">PK</text>
+      <text class="er-field" x="35" y="28">product_id INT</text>
+      <text class="er-field" x="10" y="48">name VARCHAR(100)</text>
+    </g>
+    <line class="er-line" x1="500" y1="145" x2="320" y2="170"/>
+    <text class="er-card" x="470" y="155">N</text>
+    <text class="er-card" x="360" y="155">M</text>
+    <text font-size="9" fill="#e65100" font-weight="600" font-family="inherit" text-anchor="middle" x="420" y="162">包含</text>
+  </svg>
+</div>
+
+<!-- ===== 14. 数据流图 Data Flow Diagram ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-teal">数据</span>
+    <span class="section-title">数据流图 Data Flow Diagram</span>
+  </div>
+  <p class="section-desc">追踪数据从来源到目的地的流动路径，适合系统分析、数据处理设计</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <defs>
+      <marker id="ah14" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon fill="#00796b" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 外部实体: 用户 -->
+    <rect x="30" y="20" width="100" height="50" rx="4" fill="#e0f7fa" stroke="#00796b" stroke-width="1.5"/>
+    <text x="80" y="44" font-size="11" font-weight="600" fill="#00796b" font-family="inherit" text-anchor="middle">用户终端</text>
+    <text x="80" y="58" font-size="9" fill="#888" font-family="inherit" text-anchor="middle">外部实体</text>
+    <!-- 处理1: 认证 -->
+    <circle cx="240" cy="45" r="36" fill="#00796b" opacity="0.9"/>
+    <text x="240" y="41" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">1.0</text>
+    <text x="240" y="55" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">身份认证</text>
+    <!-- 处理2: 下单 -->
+    <circle cx="240" cy="145" r="36" fill="#00796b" opacity="0.9"/>
+    <text x="240" y="141" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">2.0</text>
+    <text x="240" y="155" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">创建订单</text>
+    <!-- 数据存储1 -->
+    <rect x="410" y="20" width="100" height="40" rx="3" fill="none" stroke="#00796b" stroke-width="2"/>
+    <rect x="410" y="20" width="100" height="10" rx="3" fill="#00796b" opacity="0.1"/>
+    <text x="460" y="44" font-size="11" fill="#00796b" font-weight="600" font-family="inherit" text-anchor="middle">D1 用户表</text>
+    <!-- 数据存储2 -->
+    <rect x="410" y="130" width="100" height="40" rx="3" fill="none" stroke="#00796b" stroke-width="2"/>
+    <rect x="410" y="130" width="100" height="10" rx="3" fill="#00796b" opacity="0.1"/>
+    <text x="460" y="154" font-size="11" fill="#00796b" font-weight="600" font-family="inherit" text-anchor="middle">D2 订单表</text>
+    <!-- 外部实体: 管理员 -->
+    <rect x="540" y="120" width="100" height="50" rx="4" fill="#e0f7fa" stroke="#00796b" stroke-width="1.5"/>
+    <text x="590" y="144" font-size="11" font-weight="600" fill="#00796b" font-family="inherit" text-anchor="middle">管理后台</text>
+    <text x="590" y="158" font-size="9" fill="#888" font-family="inherit" text-anchor="middle">外部实体</text>
+    <!-- 数据流箭头 -->
+    <line class="conn" x1="130" y1="45" x2="202" y2="45" stroke="#00796b" marker-end="url(#ah14)"/>
+    <line class="conn-anim" x1="130" y1="45" x2="202" y2="45" stroke="#00796b"/>
+    <text font-size="9" fill="#00796b" font-family="inherit" text-anchor="middle" x="170" y="38">登录请求</text>
+    <line class="conn" x1="240" y1="82" x2="240" y2="107" stroke="#00796b" marker-end="url(#ah14)"/>
+    <line class="conn-anim" x1="240" y1="82" x2="240" y2="107" stroke="#00796b"/>
+    <text font-size="9" fill="#00796b" font-family="inherit" text-anchor="middle" x="255" y="96">认证通过</text>
+    <line class="conn" x1="276" y1="45" x2="408" y2="40" stroke="#00796b" marker-end="url(#ah14)"/>
+    <line class="conn-anim" x1="276" y1="45" x2="408" y2="40" stroke="#00796b"/>
+    <text font-size="9" fill="#00796b" font-family="inherit" text-anchor="middle" x="350" y="34">查询用户</text>
+    <line class="conn" x1="276" y1="145" x2="408" y2="148" stroke="#00796b" marker-end="url(#ah14)"/>
+    <line class="conn-anim" x1="276" y1="145" x2="408" y2="148" stroke="#00796b"/>
+    <text font-size="9" fill="#00796b" font-family="inherit" text-anchor="middle" x="350" y="139">写入订单</text>
+    <line class="conn" x1="460" y1="60" x2="460" y2="105" stroke="#00796b" marker-end="url(#ah14)"/>
+    <line class="conn-anim" x1="460" y1="60" x2="460" y2="105" stroke="#00796b"/>
+    <line class="conn" x1="415" y1="150" x2="378" y2="167" stroke="#999" stroke-dasharray="4 3" marker-end="url(#ah14)"/>
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="420" y="172">读取</text>
+    <line class="conn" x1="540" y1="145" x2="512" y2="145" stroke="#999" stroke-dasharray="4 3"/>
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="526" y="138">查看</text>
+  </svg>
+</div>
+
+<!-- ===== 15. 数据管道 Data Pipeline ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-teal">数据</span>
+    <span class="section-title">数据管道 Data Pipeline</span>
+  </div>
+  <p class="section-desc">展示数据从采集到服务的端到端处理链路，适合ETL、流处理设计</p>
+  <svg class="flow-svg" viewBox="0 0 660 160">
+    <defs>
+      <marker id="ah15" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 阶段1: 采集 -->
+    <rect class="n-rect" x="5" y="40" width="100" height="60" fill="#00796b"/>
+    <text class="n-title" x="55" y="62">数据采集</text>
+    <text class="n-desc" x="55" y="80">Kafka/Flume</text>
+    <!-- 阶段2: 清洗 -->
+    <line class="conn" x1="107" y1="70" x2="135" y2="70" marker-end="url(#ah15)"/>
+    <line class="conn-anim" x1="107" y1="70" x2="135" y2="70" stroke="#00796b"/>
+    <rect class="n-rect" x="137" y="40" width="100" height="60" fill="#00897b"/>
+    <text class="n-title" x="187" y="62">数据清洗</text>
+    <text class="n-desc" x="187" y="80">去重/补全</text>
+    <!-- 阶段3: 转换 -->
+    <line class="conn" x1="239" y1="70" x2="267" y2="70" marker-end="url(#ah15)"/>
+    <line class="conn-anim" x1="239" y1="70" x2="267" y2="70" stroke="#00796b"/>
+    <rect class="n-rect" x="269" y="40" width="100" height="60" fill="#009688"/>
+    <text class="n-title" x="319" y="62">数据转换</text>
+    <text class="n-desc" x="319" y="80">ETL/聚合</text>
+    <!-- 阶段4: 加载 -->
+    <line class="conn" x1="371" y1="70" x2="399" y2="70" marker-end="url(#ah15)"/>
+    <line class="conn-anim" x1="371" y1="70" x2="399" y2="70" stroke="#00796b"/>
+    <rect class="n-rect" x="401" y="40" width="100" height="60" fill="#26a69a"/>
+    <text class="n-title" x="451" y="62">数据加载</text>
+    <text class="n-desc" x="451" y="80">写入DW</text>
+    <!-- 阶段5: 服务 -->
+    <line class="conn" x1="503" y1="70" x2="531" y2="70" marker-end="url(#ah15)"/>
+    <line class="conn-anim" x1="503" y1="70" x2="531" y2="70" stroke="#00796b"/>
+    <rect class="n-rect" x="533" y="40" width="100" height="60" fill="#4db6ac"/>
+    <text class="n-title" x="583" y="62">数据服务</text>
+    <text class="n-desc" x="583" y="80">API/报表</text>
+    <!-- 流动数据粒 -->
+    <circle r="4" fill="#00796b" opacity="0.6" cx="120" cy="70"/>
+    <circle r="3" fill="#00796b" opacity="0.4" cx="252" cy="70"/>
+    <circle r="4" fill="#00796b" opacity="0.6" cx="384" cy="70"/>
+    <circle r="3" fill="#00796b" opacity="0.4" cx="516" cy="70"/>
+    <!-- 底部标注 -->
+    <text x="330" y="130" font-size="10" fill="#999" font-family="inherit" text-anchor="middle">实时流处理 (毫秒级延迟) | 批处理 (T+1) | Lambda 架构</text>
+  </svg>
+</div>
+
+<!-- ===== 16. 网络拓扑 Network Topology ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-teal">数据</span>
+    <span class="section-title">网络拓扑 Network Topology</span>
+  </div>
+  <p class="section-desc">展示网络设备之间的连接关系，适合架构评审、网络规划、故障排查</p>
+  <svg class="flow-svg" viewBox="0 0 660 220">
+    <defs>
+      <marker id="ah16" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 星型中心: 核心交换机 -->
+    <rect class="n-rect" x="260" y="65" width="140" height="60" fill="#00796b"/>
+    <text class="n-title" x="330" y="88">核心交换机</text>
+    <text class="n-desc" x="330" y="106">10GbE L3</text>
+    <!-- 边缘节点1: Web服务器 -->
+    <rect class="n-rect" x="30" y="12" width="110" height="50" fill="#00897b"/>
+    <text class="n-title" x="85" y="33">Web服务器</text>
+    <text class="n-desc" x="85" y="49">Nginx×3</text>
+    <!-- 边缘节点2: 应用服务器 -->
+    <rect class="n-rect" x="30" y="120" width="110" height="50" fill="#00897b"/>
+    <text class="n-title" x="85" y="141">应用服务器</text>
+    <text class="n-desc" x="85" y="157">Tomcat×4</text>
+    <!-- 边缘节点3: 缓存 -->
+    <rect class="n-rect" x="520" y="12" width="110" height="50" fill="#00897b"/>
+    <text class="n-title" x="575" y="33">缓存集群</text>
+    <text class="n-desc" x="575" y="49">Redis×3</text>
+    <!-- 边缘节点4: 数据库 -->
+    <rect class="n-rect" x="520" y="120" width="110" height="50" fill="#00897b"/>
+    <text class="n-title" x="575" y="141">数据库</text>
+    <text class="n-desc" x="575" y="157">MySQL主从</text>
+    <!-- 星型连线 -->
+    <line class="conn" x1="142" y1="37" x2="258" y2="80"/>
+    <line class="conn-anim" x1="142" y1="37" x2="258" y2="80" stroke="#00796b"/>
+    <line class="conn" x1="142" y1="145" x2="258" y2="115"/>
+    <line class="conn-anim" x1="142" y1="145" x2="258" y2="115" stroke="#00796b"/>
+    <line class="conn" x1="402" y1="80" x2="518" y2="37"/>
+    <line class="conn-anim" x1="402" y1="80" x2="518" y2="37" stroke="#00796b"/>
+    <line class="conn" x1="402" y1="115" x2="518" y2="145"/>
+    <line class="conn-anim" x1="402" y1="115" x2="518" y2="145" stroke="#00796b"/>
+    <!-- 连接标签 -->
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="190" y="52">HTTP/2</text>
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="190" y="142">RPC</text>
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="468" y="52">RESP</text>
+    <text font-size="9" fill="#999" font-family="inherit" text-anchor="middle" x="468" y="142">TCP 3306</text>
+    <!-- 星型标注 -->
+    <text x="330" y="185" font-size="10" fill="#999" font-family="inherit" text-anchor="middle">星型拓扑 | 核心冗余 | 链路聚合</text>
+  </svg>
+</div>
+
+<!-- ===== 17. 部署图 Deployment Diagram ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-teal">数据</span>
+    <span class="section-title">部署图 Deployment Diagram</span>
+  </div>
+  <p class="section-desc">展示软件组件在物理节点上的分布，适合运维部署方案、CI/CD规划</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <defs>
+      <marker id="ah17" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 节点1: 应用服务器 -->
+    <g transform="translate(20,15)">
+      <rect x="0" y="0" width="280" height="200" rx="8" fill="#fafafa" stroke="#00796b" stroke-width="2"/>
+      <rect x="0" y="0" width="280" height="28" rx="8" fill="#00796b"/>
+      <text x="140" y="19" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">&lt;&lt;server&gt;&gt; 应用服务器</text>
+      <text x="140" y="48" font-size="9" fill="#888" font-family="inherit" text-anchor="middle">OS: Ubuntu 22.04 | CPU: 8核 | RAM: 32G</text>
+      <!-- 内部组件 -->
+      <rect class="n-rect" x="15" y="60" width="110" height="40" fill="#00897b"/>
+      <text class="n-title" x="70" y="80">Nginx 1.24</text>
+      <rect class="n-rect" x="15" y="110" width="110" height="40" fill="#009688"/>
+      <text class="n-title" x="70" y="130">API 网关</text>
+      <rect class="n-rect" x="155" y="60" width="110" height="40" fill="#26a69a"/>
+      <text class="n-title" x="210" y="80">订单服务</text>
+      <rect class="n-rect" x="155" y="110" width="110" height="40" fill="#26a69a"/>
+      <text class="n-title" x="210" y="130">支付服务</text>
+      <rect class="n-rect" x="15" y="160" width="250" height="28" fill="#4db6ac"/>
+      <text class="n-title" x="140" y="174">Docker Compose 编排</text>
+    </g>
+    <!-- 节点2: 数据库服务器 -->
+    <g transform="translate(370,15)">
+      <rect x="0" y="0" width="270" height="200" rx="8" fill="#fafafa" stroke="#00796b" stroke-width="2"/>
+      <rect x="0" y="0" width="270" height="28" rx="8" fill="#00796b"/>
+      <text x="135" y="19" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">&lt;&lt;database&gt;&gt; 数据库服务器</text>
+      <text x="135" y="48" font-size="9" fill="#888" font-family="inherit" text-anchor="middle">OS: CentOS 8 | CPU: 16核 | RAM: 64G</text>
+      <rect class="n-rect" x="15" y="60" width="110" height="40" fill="#00897b"/>
+      <text class="n-title" x="70" y="80">MySQL 8.0</text>
+      <rect class="n-rect" x="145" y="60" width="110" height="40" fill="#00897b"/>
+      <text class="n-title" x="200" y="80">Redis 7.0</text>
+      <rect class="n-rect" x="15" y="115" width="110" height="40" fill="#009688"/>
+      <text class="n-title" x="70" y="135">从库 (只读)</text>
+      <rect class="n-rect" x="145" y="115" width="110" height="40" fill="#009688"/>
+      <text class="n-title" x="200" y="135">Sentinel</text>
+      <rect class="n-rect" x="15" y="165" width="240" height="25" fill="#4db6ac"/>
+      <text class="n-title" x="135" y="178">RAID 10 | 2TB SSD</text>
+    </g>
+    <!-- 连接线 -->
+    <line class="conn" x1="300" y1="80" x2="368" y2="80" marker-end="url(#ah17)"/>
+    <line class="conn-anim" x1="300" y1="80" x2="368" y2="80" stroke="#00796b"/>
+    <text font-size="9" fill="#00796b" font-family="inherit" text-anchor="middle" x="334" y="72">TCP 3306</text>
+    <line class="conn" x1="300" y1="135" x2="368" y2="100" marker-end="url(#ah17)"/>
+    <line class="conn-anim" x1="300" y1="135" x2="368" y2="100" stroke="#00796b"/>
+    <text font-size="9" fill="#00796b" font-family="inherit" text-anchor="middle" x="320" y="112">TCP 6379</text>
+  </svg>
+</div>
+
+<!-- ===== 18. 甘特图 Gantt Chart ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-teal">项目</span>
+    <span class="section-title">甘特图 Gantt Chart</span>
+  </div>
+  <p class="section-desc">展示任务时间线和并行关系，适合项目排期、资源规划、进度跟踪</p>
+  <svg class="flow-svg" viewBox="0 0 660 220">
+    <!-- 时间轴刻度 -->
+    <g transform="translate(180,0)">
+      <line x1="0" y1="30" x2="460" y2="30" stroke="#e0e0e0" stroke-width="1"/>
+      <text class="gantt-tick" x="0" y="22">W1</text><text class="gantt-tick" x="92" y="22">W2</text>
+      <text class="gantt-tick" x="184" y="22">W3</text><text class="gantt-tick" x="276" y="22">W4</text>
+      <text class="gantt-tick" x="368" y="22">W5</text><text class="gantt-tick" x="460" y="22">W6</text>
+    </g>
+    <!-- 网格线 -->
+    <g stroke="#f0f0f0" stroke-width="1">
+      <line x1="180" y1="48" x2="640" y2="48"/><line x1="180" y1="88" x2="640" y2="88"/>
+      <line x1="180" y1="128" x2="640" y2="128"/><line x1="180" y1="168" x2="640" y2="168"/>
+    </g>
+    <!-- 任务1: 需求分析 -->
+    <text class="gantt-task" x="170" y="58">需求分析</text>
+    <rect class="gantt-bar" x="185" y="47" width="120" height="22" fill="#00796b"/>
+    <text class="gantt-label" x="245" y="62">分析</text>
+    <!-- 任务2: UI设计 -->
+    <text class="gantt-task" x="170" y="98">UI设计</text>
+    <rect class="gantt-bar" x="215" y="87" width="140" height="22" fill="#00897b"/>
+    <text class="gantt-label" x="285" y="102">Figma</text>
+    <!-- 任务3: 后端开发 -->
+    <text class="gantt-task" x="170" y="138">后端开发</text>
+    <rect class="gantt-bar" x="260" y="127" width="200" height="22" fill="#009688"/>
+    <text class="gantt-label" x="360" y="142">Go / Java</text>
+    <!-- 任务4: 测试上线 -->
+    <text class="gantt-task" x="170" y="178">测试上线</text>
+    <rect class="gantt-bar" x="480" y="167" width="140" height="22" fill="#26a69a"/>
+    <text class="gantt-label" x="550" y="182">QA + Deploy</text>
+    <!-- 依赖线 -->
+    <line class="conn" x1="305" y1="58" x2="305" y2="85" stroke="#b0b8c4" stroke-dasharray="4 3" marker-end="url(#ah17)"/>
+    <line class="conn-anim" x1="305" y1="65" x2="305" y2="85" stroke="#00796b"/>
+    <line class="conn" x1="355" y1="98" x2="355" y2="125" stroke="#b0b8c4" stroke-dasharray="4 3" marker-end="url(#ah17)"/>
+    <line class="conn-anim" x1="355" y1="105" x2="355" y2="125" stroke="#00796b"/>
+    <line class="conn" x1="460" y1="138" x2="510" y2="165" stroke="#b0b8c4" stroke-dasharray="4 3" marker-end="url(#ah17)"/>
+    <line class="conn-anim" x1="470" y1="145" x2="510" y2="165" stroke="#00796b"/>
+    <!-- 今日线 -->
+    <line x1="440" y1="40" x2="440" y2="190" stroke="#e65100" stroke-width="1.5" stroke-dasharray="6 3"/>
+    <text x="440" y="200" font-size="9" fill="#e65100" font-weight="600" font-family="inherit" text-anchor="middle">当前</text>
+  </svg>
+</div>
+
+<!-- ===== 19. 看板图 Kanban Board ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-teal">项目</span>
+    <span class="section-title">看板图 Kanban Board</span>
+  </div>
+  <p class="section-desc">可视化工作流和任务状态，适合敏捷开发、任务管理、团队协作</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <!-- 列1: 待办 -->
+    <g transform="translate(10,5)">
+      <rect x="0" y="0" width="200" height="230" rx="8" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+      <rect x="0" y="0" width="200" height="36" rx="8" fill="#00796b"/>
+      <text x="100" y="23" font-size="13" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">待办 (3)</text>
+      <!-- 卡片 -->
+      <rect x="12" y="46" width="176" height="44" rx="6" fill="#fff" stroke="#e0e0e0" stroke-width="1"/>
+      <text x="22" y="66" font-size="11" font-weight="600" fill="#1B365D" font-family="inherit">用户登录模块</text>
+      <text x="22" y="81" font-size="9" fill="#999" font-family="inherit">#DEV-101 优先:高</text>
+      <rect x="12" y="98" width="176" height="44" rx="6" fill="#fff" stroke="#e0e0e0" stroke-width="1"/>
+      <text x="22" y="118" font-size="11" font-weight="600" fill="#1B365D" font-family="inherit">数据导出功能</text>
+      <text x="22" y="133" font-size="9" fill="#999" font-family="inherit">#DEV-105 优先:中</text>
+      <rect x="12" y="150" width="176" height="44" rx="6" fill="#fff" stroke="#e0e0e0" stroke-width="1"/>
+      <text x="22" y="170" font-size="11" font-weight="600" fill="#1B365D" font-family="inherit">API文档完善</text>
+      <text x="22" y="185" font-size="9" fill="#999" font-family="inherit">#DOC-012 优先:低</text>
+    </g>
+    <!-- 列2: 进行中 -->
+    <g transform="translate(225,5)">
+      <rect x="0" y="0" width="200" height="230" rx="8" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+      <rect x="0" y="0" width="200" height="36" rx="8" fill="#00897b"/>
+      <text x="100" y="23" font-size="13" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">进行中 (2)</text>
+      <rect x="12" y="46" width="176" height="44" rx="6" fill="#fff" stroke="#00897b" stroke-width="1.5"/>
+      <text x="22" y="66" font-size="11" font-weight="600" fill="#1B365D" font-family="inherit">支付网关对接</text>
+      <text x="22" y="81" font-size="9" fill="#00897b" font-family="inherit">#DEV-102 进度 60%</text>
+      <rect x="12" y="98" width="176" height="44" rx="6" fill="#fff" stroke="#00897b" stroke-width="1.5"/>
+      <text x="22" y="118" font-size="11" font-weight="600" fill="#1B365D" font-family="inherit">搜索优化</text>
+      <text x="22" y="133" font-size="9" fill="#e65100" font-family="inherit">#DEV-103 阻塞</text>
+    </g>
+    <!-- 列3: 完成 -->
+    <g transform="translate(440,5)">
+      <rect x="0" y="0" width="200" height="230" rx="8" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+      <rect x="0" y="0" width="200" height="36" rx="8" fill="#26a69a"/>
+      <text x="100" y="23" font-size="13" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">完成 (2)</text>
+      <rect x="12" y="46" width="176" height="44" rx="6" fill="#fff" stroke="#e0e0e0" stroke-width="1"/>
+      <text x="22" y="66" font-size="11" font-weight="600" fill="#1B365D" font-family="inherit">用户注册</text>
+      <text x="22" y="81" font-size="9" fill="#999" font-family="inherit">#DEV-100 ✓</text>
+      <rect x="12" y="98" width="176" height="44" rx="6" fill="#fff" stroke="#e0e0e0" stroke-width="1"/>
+      <text x="22" y="118" font-size="11" font-weight="600" fill="#1B365D" font-family="inherit">基础框架搭建</text>
+      <text x="22" y="133" font-size="9" fill="#999" font-family="inherit">#DEV-001 ✓</text>
+    </g>
+    <!-- WIP 限制标注 -->
+    <text x="325" y="220" font-size="9" fill="#e65100" font-weight="600" font-family="inherit" text-anchor="middle">WIP 限制: 每列≤3</text>
+  </svg>
+</div>
+
+<!-- ===== 20. 泳道图 Swimlane Diagram ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-teal">项目</span>
+    <span class="section-title">泳道图 Swimlane Diagram</span>
+  </div>
+  <p class="section-desc">按角色/部门分隔流程步骤，适合跨团队协作流程、职责划分</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <defs>
+      <marker id="ah20" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 泳道1: 前端 -->
+    <rect class="lane-bg" x="0" y="0" width="660" height="75" rx="0"/>
+    <rect x="0" y="0" width="70" height="75" fill="#e0f7fa"/>
+    <text class="lane-header" x="35" y="40">前端</text>
+    <!-- 泳道2: 后端 -->
+    <rect class="lane-bg" x="0" y="75" width="660" height="75" rx="0"/>
+    <rect x="0" y="75" width="70" height="75" fill="#e0f2f1"/>
+    <text class="lane-header" x="35" y="115">后端</text>
+    <!-- 泳道3: 数据 -->
+    <rect class="lane-bg" x="0" y="150" width="660" height="90" rx="0"/>
+    <rect x="0" y="150" width="70" height="90" fill="#fff3e0"/>
+    <text class="lane-header" x="35" y="198">数据</text>
+    <!-- 节点: 前端活动 -->
+    <rect class="lane-node" x="90" y="15" width="110" height="40" fill="#00796b"/>
+    <text class="n-title" x="145" y="35">发起请求</text>
+    <rect class="lane-node" x="460" y="15" width="110" height="40" fill="#00796b"/>
+    <text class="n-title" x="515" y="35">渲染结果</text>
+    <!-- 节点: 后端活动 -->
+    <rect class="lane-node" x="230" y="90" width="110" height="40" fill="#00897b"/>
+    <text class="n-title" x="285" y="110">鉴权校验</text>
+    <rect class="lane-node" x="370" y="90" width="110" height="40" fill="#00897b"/>
+    <text class="n-title" x="425" y="110">业务处理</text>
+    <!-- 节点: 数据活动 -->
+    <rect class="lane-node" x="230" y="165" width="110" height="40" fill="#e65100"/>
+    <text class="n-title" x="285" y="185">查询DB</text>
+    <rect class="lane-node" x="370" y="165" width="110" height="40" fill="#e65100"/>
+    <text class="n-title" x="425" y="185">写入日志</text>
+    <!-- 跨泳道箭头 -->
+    <line class="conn" x1="202" y1="35" x2="283" y2="88" marker-end="url(#ah20)"/>
+    <line class="conn-anim" x1="202" y1="35" x2="283" y2="88" stroke="#00796b"/>
+    <line class="conn" x1="285" y1="130" x2="285" y2="163" marker-end="url(#ah20)"/>
+    <line class="conn-anim" x1="285" y1="130" x2="285" y2="163" stroke="#00796b"/>
+    <line class="conn" x1="230" y1="185" x2="230" y2="185" />
+    <line class="conn" x1="342" y1="110" x2="368" y2="110" marker-end="url(#ah20)"/>
+    <line class="conn-anim" x1="342" y1="110" x2="368" y2="110" stroke="#00796b"/>
+    <line class="conn" x1="425" y1="130" x2="425" y2="163" marker-end="url(#ah20)"/>
+    <line class="conn-anim" x1="425" y1="130" x2="425" y2="163" stroke="#00796b"/>
+    <line class="conn" x1="425" y1="185" x2="515" y2="57" marker-end="url(#ah20)"/>
+    <line class="conn-anim" x1="425" y1="185" x2="515" y2="57" stroke="#00796b"/>
+  </svg>
+</div>
+
+<!-- ===== 21. 时间线 Timeline ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-teal">项目</span>
+    <span class="section-title">时间线 Timeline</span>
+  </div>
+  <p class="section-desc">按时间顺序展示里程碑事件，适合项目路线图、产品迭代历史</p>
+  <svg class="flow-svg" viewBox="0 0 660 260">
+    <defs>
+      <marker id="ah21" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 纵向时间轴 -->
+    <line x1="330" y1="10" x2="330" y2="250" stroke="#00796b" stroke-width="2"/>
+    <!-- 事件节点和内容（左右交替） -->
+    <!-- 节点1（左） -->
+    <circle cx="330" cy="30" r="6" fill="#00796b"/>
+    <line class="conn" x1="330" y1="30" x2="250" y2="30"/>
+    <rect class="n-rect" x="140" y="15" width="110" height="36" fill="#00796b"/>
+    <text class="n-title" x="195" y="33">项目立项</text>
+    <text x="150" y="62" font-size="9" fill="#999" font-family="inherit">Q1 - 需求评审通过</text>
+    <!-- 节点2（右） -->
+    <circle cx="330" cy="80" r="6" fill="#00796b"/>
+    <line class="conn" x1="330" y1="80" x2="410" y2="80"/>
+    <rect class="n-rect" x="410" y="65" width="110" height="36" fill="#00796b"/>
+    <text class="n-title" x="465" y="83">原型设计</text>
+    <text x="420" y="112" font-size="9" fill="#999" font-family="inherit">Q2 - Figma 交互稿</text>
+    <!-- 节点3（左） -->
+    <circle cx="330" cy="130" r="6" fill="#00796b"/>
+    <line class="conn" x1="330" y1="130" x2="250" y2="130"/>
+    <rect class="n-rect" x="140" y="115" width="110" height="36" fill="#00796b"/>
+    <text class="n-title" x="195" y="133">MVP 开发</text>
+    <text x="150" y="162" font-size="9" fill="#999" font-family="inherit">Q3 - 核心功能完成</text>
+    <!-- 节点4（右） -->
+    <circle cx="330" cy="180" r="6" fill="#e65100"/>
+    <line class="conn" x1="330" y1="180" x2="410" y2="180"/>
+    <rect class="n-rect" x="410" y="165" width="110" height="36" fill="#e65100"/>
+    <text class="n-title" x="465" y="183">内测发布</text>
+    <text x="420" y="212" font-size="9" fill="#999" font-family="inherit">Q4 - 灰度 1000 用户</text>
+    <!-- 节点5（左） -->
+    <circle cx="330" cy="230" r="6" fill="#2e7d32"/>
+    <line class="conn" x1="330" y1="230" x2="250" y2="230"/>
+    <rect class="n-rect" x="140" y="215" width="110" height="36" fill="#2e7d32"/>
+    <text class="n-title" x="195" y="233">正式上线</text>
+    <text x="150" y="260" font-size="9" fill="#999" font-family="inherit">Q1+1 - 全量发布</text>
+    <!-- 流动标记 -->
+    <circle cx="330" cy="10" r="4" fill="#00796b" opacity="0.3">
+      <animate attributeName="cy" from="10" to="260" dur="4s" repeatCount="indefinite"/>
+    </circle>
+  </svg>
+</div>
+
+<!-- ===== 22. 思维导图 Mind Map ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-orange">思维</span>
+    <span class="section-title">思维导图 Mind Map</span>
+  </div>
+  <p class="section-desc">从中心主题辐射发散，适合头脑风暴、知识梳理、会议纪要</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <defs>
+      <marker id="ah22" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 中心圆 -->
+    <circle cx="330" cy="120" r="36" fill="#e65100"/>
+    <text x="330" y="116" font-size="12" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">产品规划</text>
+    <text x="330" y="132" font-size="9" fill="rgba(255,255,255,0.8)" font-family="inherit" text-anchor="middle">核心主题</text>
+    <!-- 分支1: 用户研究 (上) -->
+    <line class="conn" x1="303" y1="95" x2="180" y2="35" marker-end="url(#ah22)"/>
+    <line class="conn-anim" x1="303" y1="95" x2="180" y2="35" stroke="#e65100"/>
+    <circle cx="160" cy="25" r="24" fill="#ff8f00"/>
+    <text class="n-title" x="160" y="25" font-size="10">用户研究</text>
+    <!-- 子分支 -->
+    <circle cx="80" cy="12" r="16" fill="#ffb300"/>
+    <text class="n-title" x="80" y="12" font-size="8">访谈</text>
+    <line class="conn" x1="138" y1="25" x2="97" y2="14"/>
+    <circle cx="80" cy="42" r="16" fill="#ffb300"/>
+    <text class="n-title" x="80" y="42" font-size="8">问卷</text>
+    <line class="conn" x1="138" y1="25" x2="97" y2="41"/>
+    <!-- 分支2: 技术选型 (右) -->
+    <line class="conn" x1="357" y1="95" x2="500" y2="35" marker-end="url(#ah22)"/>
+    <line class="conn-anim" x1="357" y1="95" x2="500" y2="35" stroke="#e65100"/>
+    <circle cx="520" cy="25" r="24" fill="#ff8f00"/>
+    <text class="n-title" x="520" y="25" font-size="10">技术选型</text>
+    <circle cx="600" cy="12" r="16" fill="#ffb300"/>
+    <text class="n-title" x="600" y="12" font-size="8">React</text>
+    <line class="conn" x1="542" y1="25" x2="583" y2="14"/>
+    <circle cx="600" cy="42" r="16" fill="#ffb300"/>
+    <text class="n-title" x="600" y="42" font-size="8">Go</text>
+    <line class="conn" x1="542" y1="25" x2="583" y2="41"/>
+    <!-- 分支3: 运营策略 (下) -->
+    <line class="conn" x1="303" y1="145" x2="180" y2="205" marker-end="url(#ah22)"/>
+    <line class="conn-anim" x1="303" y1="145" x2="180" y2="205" stroke="#e65100"/>
+    <circle cx="160" cy="215" r="24" fill="#ff8f00"/>
+    <text class="n-title" x="160" y="215" font-size="10">运营策略</text>
+    <circle cx="80" cy="202" r="16" fill="#ffb300"/>
+    <text class="n-title" x="80" y="202" font-size="8">SEO</text>
+    <line class="conn" x1="138" y1="215" x2="97" y2="204"/>
+    <circle cx="80" cy="232" r="16" fill="#ffb300"/>
+    <text class="n-title" x="80" y="232" font-size="8">投放</text>
+    <line class="conn" x1="138" y1="215" x2="97" y2="231"/>
+    <!-- 分支4: 商业模式 (右下) -->
+    <line class="conn" x1="357" y1="145" x2="500" y2="205" marker-end="url(#ah22)"/>
+    <line class="conn-anim" x1="357" y1="145" x2="500" y2="205" stroke="#e65100"/>
+    <circle cx="520" cy="215" r="24" fill="#ff8f00"/>
+    <text class="n-title" x="520" y="215" font-size="10">商业模式</text>
+    <circle cx="600" cy="202" r="16" fill="#ffb300"/>
+    <text class="n-title" x="600" y="202" font-size="8">SaaS</text>
+    <line class="conn" x1="542" y1="215" x2="583" y2="204"/>
+    <circle cx="600" cy="232" r="16" fill="#ffb300"/>
+    <text class="n-title" x="600" y="232" font-size="8">广告</text>
+    <line class="conn" x1="542" y1="215" x2="583" y2="231"/>
+  </svg>
+</div>
+
+<!-- ===== 23. 决策树 Decision Tree ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-orange">思维</span>
+    <span class="section-title">决策树 Decision Tree</span>
+  </div>
+  <p class="section-desc">通过逐层判断分支到达结论，适合分类决策、问题诊断、风控规则</p>
+  <svg class="flow-svg" viewBox="0 0 660 260">
+    <defs>
+      <marker id="ah23" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 根节点 -->
+    <rect class="n-rect" x="260" y="5" width="140" height="40" fill="#e65100"/>
+    <text class="n-title" x="330" y="25">贷款申请</text>
+    <!-- 第一层判断: 征信分 > 600? -->
+    <line class="conn" x1="330" y1="45" x2="330" y2="70" marker-end="url(#ah23)"/>
+    <line class="conn-anim" x1="330" y1="45" x2="330" y2="70" stroke="#e65100"/>
+    <polygon points="330,72 375,98 330,124 285,98" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+    <text x="330" y="95" font-size="10" font-weight="600" fill="#e65100" text-anchor="middle" font-family="inherit">征信 &gt; 600?</text>
+    <!-- 左侧分支: 否 -->
+    <text x="280" y="105" font-size="9" fill="#c62828" font-weight="600" font-family="inherit">否</text>
+    <line class="conn" x1="285" y1="98" x2="150" y2="134" marker-end="url(#ah23)"/>
+    <rect class="n-rect" x="80" y="120" width="140" height="36" fill="#c62828"/>
+    <text class="n-title" x="150" y="138">拒绝申请</text>
+    <!-- 右侧分支: 是 → 第二层判断 -->
+    <text x="370" y="105" font-size="9" fill="#2e7d32" font-weight="600" font-family="inherit">是</text>
+    <line class="conn" x1="375" y1="98" x2="510" y2="134" marker-end="url(#ah23)"/>
+    <line class="conn-anim" x1="375" y1="98" x2="510" y2="134" stroke="#e65100"/>
+    <polygon points="510,136 550,158 510,180 470,158" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+    <text x="510" y="155" font-size="10" font-weight="600" fill="#e65100" text-anchor="middle" font-family="inherit">收入 &gt; 5K?</text>
+    <!-- 否 → 人工审核 -->
+    <text x="465" y="175" font-size="9" fill="#c62828" font-weight="600" font-family="inherit">否</text>
+    <line class="conn" x1="470" y1="158" x2="310" y2="200" marker-end="url(#ah23)"/>
+    <rect class="n-rect" x="240" y="186" width="140" height="36" fill="#ff8f00"/>
+    <text class="n-title" x="310" y="204">人工审核</text>
+    <!-- 是 → 通过 -->
+    <text x="540" y="175" font-size="9" fill="#2e7d32" font-weight="600" font-family="inherit">是</text>
+    <line class="conn" x1="550" y1="158" x2="600" y2="158" marker-end="url(#ah23)"/>
+    <rect class="n-rect" x="560" y="140" width="90" height="36" fill="#2e7d32"/>
+    <text class="n-title" x="605" y="158">通过审批</text>
+    <!-- 图例 -->
+    <g transform="translate(10,240)">
+      <rect x="0" y="0" width="12" height="12" rx="3" fill="#e65100"/>
+      <text x="18" y="10" font-size="9" fill="#999" font-family="inherit">判断节点</text>
+      <rect x="70" y="0" width="12" height="12" rx="3" fill="#2e7d32"/>
+      <text x="88" y="10" font-size="9" fill="#999" font-family="inherit">通过</text>
+      <rect x="130" y="0" width="12" height="12" rx="3" fill="#c62828"/>
+      <text x="148" y="10" font-size="9" fill="#999" font-family="inherit">拒绝</text>
+      <rect x="190" y="0" width="12" height="12" rx="3" fill="#ff8f00"/>
+      <text x="208" y="10" font-size="9" fill="#999" font-family="inherit">待定</text>
+    </g>
+  </svg>
+</div>
+
+<!-- ===== 24. 鱼骨图 Fishbone Diagram ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-orange">思维</span>
+    <span class="section-title">鱼骨图 Fishbone Diagram</span>
+  </div>
+  <p class="section-desc">分析问题根本原因，适合根因分析、质量改进、复盘总结</p>
+  <svg class="flow-svg" viewBox="0 0 660 220">
+    <defs>
+      <marker id="ah24" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 主骨线 -->
+    <line x1="30" y1="110" x2="560" y2="110" stroke="#e65100" stroke-width="3"/>
+    <!-- 鱼头（问题） -->
+    <rect class="n-rect" x="550" y="90" width="100" height="40" fill="#e65100"/>
+    <text class="n-title" x="600" y="110">订单转化率低</text>
+    <!-- 分支1: 人员 (上1) -->
+    <line class="conn" x1="100" y1="110" x2="100" y2="35" stroke="#ff8f00" stroke-width="1.5"/>
+    <line class="conn-anim" x1="100" y1="110" x2="100" y2="35" stroke="#e65100"/>
+    <rect class="n-rect" x="55" y="5" width="90" height="30" fill="#ff8f00"/>
+    <text class="n-title" x="100" y="20" font-size="10">客服响应慢</text>
+    <!-- 分支2: 流程 (上2) -->
+    <line class="conn" x1="200" y1="110" x2="200" y2="35" stroke="#ff8f00" stroke-width="1.5"/>
+    <line class="conn-anim" x1="200" y1="110" x2="200" y2="35" stroke="#e65100"/>
+    <rect class="n-rect" x="155" y="5" width="90" height="30" fill="#ff8f00"/>
+    <text class="n-title" x="200" y="20" font-size="10">支付步骤过多</text>
+    <!-- 分支3: 技术 (上3) -->
+    <line class="conn" x1="300" y1="110" x2="300" y2="35" stroke="#ff8f00" stroke-width="1.5"/>
+    <line class="conn-anim" x1="300" y1="110" x2="300" y2="35" stroke="#e65100"/>
+    <rect class="n-rect" x="255" y="5" width="90" height="30" fill="#ff8f00"/>
+    <text class="n-title" x="300" y="20" font-size="10">页面加载慢</text>
+    <!-- 分支4: 环境 (下1) -->
+    <line class="conn" x1="100" y1="110" x2="100" y2="185" stroke="#ff8f00" stroke-width="1.5"/>
+    <line class="conn-anim" x1="100" y1="110" x2="100" y2="185" stroke="#e65100"/>
+    <rect class="n-rect" x="55" y="185" width="90" height="30" fill="#ff8f00"/>
+    <text class="n-title" x="100" y="200" font-size="10">竞品促销</text>
+    <!-- 分支5: 产品 (下2) -->
+    <line class="conn" x1="200" y1="110" x2="200" y2="185" stroke="#ff8f00" stroke-width="1.5"/>
+    <line class="conn-anim" x1="200" y1="110" x2="200" y2="185" stroke="#e65100"/>
+    <rect class="n-rect" x="155" y="185" width="90" height="30" fill="#ff8f00"/>
+    <text class="n-title" x="200" y="200" font-size="10">价格无优势</text>
+    <!-- 分支6: 设计 (下3) -->
+    <line class="conn" x1="300" y1="110" x2="300" y2="185" stroke="#ff8f00" stroke-width="1.5"/>
+    <line class="conn-anim" x1="300" y1="110" x2="300" y2="185" stroke="#e65100"/>
+    <rect class="n-rect" x="255" y="185" width="90" height="30" fill="#ff8f00"/>
+    <text class="n-title" x="300" y="200" font-size="10">CTA不突出</text>
+    <!-- 分支标签 -->
+    <text x="100" y="50" font-size="9" fill="#e65100" font-weight="600" font-family="inherit" text-anchor="middle">人员</text>
+    <text x="200" y="50" font-size="9" fill="#e65100" font-weight="600" font-family="inherit" text-anchor="middle">流程</text>
+    <text x="300" y="50" font-size="9" fill="#e65100" font-weight="600" font-family="inherit" text-anchor="middle">技术</text>
+    <text x="100" y="170" font-size="9" fill="#e65100" font-weight="600" font-family="inherit" text-anchor="middle">环境</text>
+    <text x="200" y="170" font-size="9" fill="#e65100" font-weight="600" font-family="inherit" text-anchor="middle">产品</text>
+    <text x="300" y="170" font-size="9" fill="#e65100" font-weight="600" font-family="inherit" text-anchor="middle">设计</text>
+  </svg>
+</div>
+
+<!-- ===== 25. 组织架构 Org Chart ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-orange">思维</span>
+    <span class="section-title">组织架构 Org Chart</span>
+  </div>
+  <p class="section-desc">展示团队层级关系和汇报线，适合作组织设计、团队介绍、权责划分</p>
+  <svg class="flow-svg" viewBox="0 0 660 200">
+    <defs>
+      <marker id="ah25" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 第1层: CEO -->
+    <rect class="n-rect" x="260" y="5" width="140" height="38" fill="#e65100"/>
+    <text class="n-title" x="330" y="24">CEO 张总</text>
+    <!-- 连线到第2层 -->
+    <line class="conn" x1="270" y1="43" x2="140" y2="75"/>
+    <line class="conn-anim" x1="270" y1="43" x2="140" y2="75" stroke="#e65100"/>
+    <line class="conn" x1="330" y1="43" x2="330" y2="75"/>
+    <line class="conn-anim" x1="330" y1="43" x2="330" y2="75" stroke="#e65100"/>
+    <line class="conn" x1="390" y1="43" x2="520" y2="75"/>
+    <line class="conn-anim" x1="390" y1="43" x2="520" y2="75" stroke="#e65100"/>
+    <!-- 第2层: CTO / CPO / COO -->
+    <rect class="n-rect" x="70" y="75" width="140" height="38" fill="#ff8f00"/>
+    <text class="n-title" x="140" y="94">CTO 李工</text>
+    <rect class="n-rect" x="260" y="75" width="140" height="38" fill="#ff8f00"/>
+    <text class="n-title" x="330" y="94">CPO 王设</text>
+    <rect class="n-rect" x="450" y="75" width="140" height="38" fill="#ff8f00"/>
+    <text class="n-title" x="520" y="94">COO 赵营</text>
+    <!-- 连线到第3层 (CTO 下属) -->
+    <line class="conn" x1="100" y1="113" x2="50" y2="145"/>
+    <line class="conn-anim" x1="100" y1="113" x2="50" y2="145" stroke="#e65100"/>
+    <line class="conn" x1="180" y1="113" x2="130" y2="145"/>
+    <line class="conn-anim" x1="180" y1="113" x2="130" y2="145" stroke="#e65100"/>
+    <!-- 第3层 -->
+    <rect class="n-rect" x="5" y="145" width="100" height="32" fill="#ffb300"/>
+    <text class="n-title" x="55" y="161" font-size="10">前端组长</text>
+    <rect class="n-rect" x="115" y="145" width="100" height="32" fill="#ffb300"/>
+    <text class="n-title" x="165" y="161" font-size="10">后端组长</text>
+    <!-- CPO 下属 -->
+    <rect class="n-rect" x="250" y="145" width="100" height="32" fill="#ffb300"/>
+    <text class="n-title" x="300" y="161" font-size="10">UI组长</text>
+    <line class="conn" x1="300" y1="113" x2="300" y2="143"/>
+    <line class="conn-anim" x1="300" y1="113" x2="300" y2="143" stroke="#e65100"/>
+    <rect class="n-rect" x="360" y="145" width="100" height="32" fill="#ffb300"/>
+    <text class="n-title" x="410" y="161" font-size="10">产品组长</text>
+    <line class="conn" x1="360" y1="113" x2="410" y2="143"/>
+    <line class="conn-anim" x1="360" y1="113" x2="410" y2="143" stroke="#e65100"/>
+    <!-- COO 下属 -->
+    <rect class="n-rect" x="450" y="145" width="100" height="32" fill="#ffb300"/>
+    <text class="n-title" x="500" y="161" font-size="10">市场组长</text>
+    <line class="conn" x1="500" y1="113" x2="500" y2="143"/>
+    <line class="conn-anim" x1="500" y1="113" x2="500" y2="143" stroke="#e65100"/>
+    <rect class="n-rect" x="555" y="145" width="100" height="32" fill="#ffb300"/>
+    <text class="n-title" x="605" y="161" font-size="10">运营组长</text>
+    <line class="conn" x1="560" y1="113" x2="605" y2="143"/>
+    <line class="conn-anim" x1="560" y1="113" x2="605" y2="143" stroke="#e65100"/>
+  </svg>
+</div>
+
+<!-- ===== 26. 信息架构 Information Architecture ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-orange">思维</span>
+    <span class="section-title">信息架构 Information Architecture</span>
+  </div>
+  <p class="section-desc">展示信息层级和导航结构，适合网站设计、内容组织、产品架构</p>
+  <svg class="flow-svg" viewBox="0 0 660 200">
+    <defs/>
+    <!-- 第1层: 首页 -->
+    <rect class="n-rect" x="250" y="5" width="160" height="36" fill="#e65100"/>
+    <text class="n-title" x="330" y="23">首页</text>
+    <!-- L1→L2 连线 -->
+    <line class="conn" x1="280" y1="41" x2="80" y2="70"/>
+    <line class="conn-anim" x1="280" y1="41" x2="80" y2="70" stroke="#e65100"/>
+    <line class="conn" x1="330" y1="41" x2="330" y2="70"/>
+    <line class="conn-anim" x1="330" y1="41" x2="330" y2="70" stroke="#e65100"/>
+    <line class="conn" x1="380" y1="41" x2="580" y2="70"/>
+    <line class="conn-anim" x1="380" y1="41" x2="580" y2="70" stroke="#e65100"/>
+    <!-- 第2层 -->
+    <rect class="n-rect" x="20" y="70" width="120" height="36" fill="#ff8f00"/>
+    <text class="n-title" x="80" y="88">产品中心</text>
+    <rect class="n-rect" x="270" y="70" width="120" height="36" fill="#ff8f00"/>
+    <text class="n-title" x="330" y="88">关于我们</text>
+    <rect class="n-rect" x="520" y="70" width="120" height="36" fill="#ff8f00"/>
+    <text class="n-title" x="580" y="88">帮助中心</text>
+    <!-- L2→L3 连线 -->
+    <line class="conn" x1="50" y1="106" x2="15" y2="135"/>
+    <line class="conn-anim" x1="50" y1="106" x2="15" y2="135" stroke="#e65100"/>
+    <line class="conn" x1="80" y1="106" x2="80" y2="135"/>
+    <line class="conn-anim" x1="80" y1="106" x2="80" y2="135" stroke="#e65100"/>
+    <line class="conn" x1="110" y1="106" x2="145" y2="135"/>
+    <line class="conn-anim" x1="110" y1="106" x2="145" y2="135" stroke="#e65100"/>
+    <line class="conn" x1="580" y1="106" x2="530" y2="135"/>
+    <line class="conn-anim" x1="580" y1="106" x2="530" y2="135" stroke="#e65100"/>
+    <line class="conn" x1="580" y1="106" x2="580" y2="135"/>
+    <line class="conn-anim" x1="580" y1="106" x2="580" y2="135" stroke="#e65100"/>
+    <line class="conn" x1="580" y1="106" x2="630" y2="135"/>
+    <line class="conn-anim" x1="580" y1="106" x2="630" y2="135" stroke="#e65100"/>
+    <!-- 第3层 -->
+    <rect class="n-rect" x="0" y="135" width="85" height="30" fill="#ffb300"/>
+    <text class="n-title" x="42" y="150" font-size="10">功能列表</text>
+    <rect class="n-rect" x="90" y="135" width="85" height="30" fill="#ffb300"/>
+    <text class="n-title" x="132" y="150" font-size="10">价格方案</text>
+    <rect class="n-rect" x="180" y="135" width="85" height="30" fill="#ffb300"/>
+    <text class="n-title" x="222" y="150" font-size="10">用户案例</text>
+    <rect class="n-rect" x="480" y="135" width="85" height="30" fill="#ffb300"/>
+    <text class="n-title" x="522" y="150" font-size="10">FAQ</text>
+    <rect class="n-rect" x="570" y="135" width="85" height="30" fill="#ffb300"/>
+    <text class="n-title" x="612" y="150" font-size="10">文档</text>
+    <!-- 嵌套层级标注 -->
+    <g transform="translate(270,130)">
+      <rect x="0" y="0" width="120" height="42" rx="6" fill="none" stroke="#ffb300" stroke-dasharray="4 3"/>
+      <text x="60" y="16" font-size="8" fill="#999" font-family="inherit" text-anchor="middle">L3 叶子节点</text>
+      <text x="60" y="30" font-size="8" fill="#999" font-family="inherit" text-anchor="middle">实际内容页</text>
+    </g>
+  </svg>
+</div>
+
+<!-- ===== 27. 用户旅程图 User Journey Map ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-loop">UX</span>
+    <span class="section-title">用户旅程图 User Journey Map</span>
+  </div>
+  <p class="section-desc">追踪用户在各触点的情绪和行为变化，适合体验设计、服务优化</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <!-- 阶段标签 -->
+    <rect class="n-rect" x="20" y="8" width="110" height="32" fill="#7b1fa2"/>
+    <text class="n-title" x="75" y="24">发现产品</text>
+    <rect class="n-rect" x="145" y="8" width="110" height="32" fill="#7b1fa2"/>
+    <text class="n-title" x="200" y="24">注册体验</text>
+    <rect class="n-rect" x="270" y="8" width="110" height="32" fill="#7b1fa2"/>
+    <text class="n-title" x="325" y="24">首次使用</text>
+    <rect class="n-rect" x="395" y="8" width="110" height="32" fill="#7b1fa2"/>
+    <text class="n-title" x="450" y="24">深度使用</text>
+    <rect class="n-rect" x="520" y="8" width="110" height="32" fill="#7b1fa2"/>
+    <text class="n-title" x="575" y="24">推荐分享</text>
+    <!-- 触点图标 (小圆) -->
+    <circle cx="75" cy="58" r="5" fill="#7b1fa2" opacity="0.5"/>
+    <circle cx="200" cy="58" r="5" fill="#7b1fa2" opacity="0.5"/>
+    <circle cx="325" cy="58" r="5" fill="#7b1fa2" opacity="0.5"/>
+    <circle cx="450" cy="58" r="5" fill="#7b1fa2" opacity="0.5"/>
+    <circle cx="575" cy="58" r="5" fill="#7b1fa2" opacity="0.5"/>
+    <!-- 情绪曲线 (波浪) -->
+    <path fill="none" stroke="#c62828" stroke-width="2.5" d="M75,80 Q137,55 200,70 Q262,85 325,95 Q387,105 450,65 Q512,25 575,40"/>
+    <circle cx="75" cy="80" r="4" fill="#ff8f00"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>
+    <circle cx="200" cy="70" r="4" fill="#c62828"/>
+    <circle cx="325" cy="95" r="4" fill="#2e7d32"/>
+    <circle cx="450" cy="65" r="4" fill="#2e7d32"/>
+    <circle cx="575" cy="40" r="4" fill="#ff8f00"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>
+    <!-- 情绪标注 -->
+    <text x="75" y="100" font-size="9" fill="#ff8f00" font-weight="600" font-family="inherit" text-anchor="middle">期待</text>
+    <text x="200" y="88" font-size="9" fill="#c62828" font-weight="600" font-family="inherit" text-anchor="middle">困惑</text>
+    <text x="325" y="112" font-size="9" fill="#2e7d32" font-weight="600" font-family="inherit" text-anchor="middle">满意</text>
+    <text x="450" y="80" font-size="9" fill="#2e7d32" font-weight="600" font-family="inherit" text-anchor="middle">信任</text>
+    <text x="575" y="55" font-size="9" fill="#ff8f00" font-weight="600" font-family="inherit" text-anchor="middle">忠诚</text>
+    <!-- 触点说明 -->
+    <rect x="15" y="120" width="120" height="48" rx="6" fill="#f3e5f5"/>
+    <text x="25" y="138" font-size="10" font-weight="600" fill="#7b1fa2" font-family="inherit">搜索引擎广告</text>
+    <text x="25" y="155" font-size="9" fill="#999" font-family="inherit">点击率 2.3%</text>
+    <rect x="145" y="120" width="120" height="48" rx="6" fill="#f3e5f5"/>
+    <text x="155" y="138" font-size="10" font-weight="600" fill="#7b1fa2" font-family="inherit">邮箱验证</text>
+    <text x="155" y="155" font-size="9" fill="#999" font-family="inherit">完成率 85%</text>
+    <rect x="275" y="120" width="120" height="48" rx="6" fill="#f3e5f5"/>
+    <text x="285" y="138" font-size="10" font-weight="600" fill="#7b1fa2" font-family="inherit">新手引导</text>
+    <text x="285" y="155" font-size="9" fill="#999" font-family="inherit">跳过率 40%</text>
+    <rect x="410" y="120" width="100" height="48" rx="6" fill="#f3e5f5"/>
+    <text x="420" y="138" font-size="10" font-weight="600" fill="#7b1fa2" font-family="inherit">核心功能</text>
+    <text x="420" y="155" font-size="9" fill="#999" font-family="inherit">留存率 60%</text>
+    <rect x="525" y="120" width="120" height="48" rx="6" fill="#f3e5f5"/>
+    <text x="535" y="138" font-size="10" font-weight="600" fill="#7b1fa2" font-family="inherit">邀请好友</text>
+    <text x="535" y="155" font-size="9" fill="#999" font-family="inherit">K因子 0.8</text>
+    <!-- 底部说明 -->
+    <text x="330" y="200" font-size="10" fill="#999" font-family="inherit" text-anchor="middle">情绪: 🤩期待 → 😰困惑 → 😊满意 → 😍信任 → 🥳忠诚</text>
+  </svg>
+</div>
+
+<!-- ===== 28. 服务蓝图 Service Blueprint ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-loop">UX</span>
+    <span class="section-title">服务蓝图 Service Blueprint</span>
+  </div>
+  <p class="section-desc">分层展示服务交付中的前台和后台活动，适合服务设计、体验优化</p>
+  <svg class="flow-svg" viewBox="0 0 660 220">
+    <defs>
+      <marker id="ah28" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 用户层 -->
+    <rect x="0" y="0" width="660" height="60" fill="#f3e5f5" rx="0"/>
+    <text x="12" y="22" font-size="10" font-weight="600" fill="#7b1fa2" font-family="inherit">用户行为</text>
+    <rect class="n-rect" x="15" y="30" width="90" height="24" fill="#7b1fa2"/>
+    <text class="n-title" x="60" y="42" font-size="10">搜索商品</text>
+    <rect class="n-rect" x="120" y="30" width="90" height="24" fill="#7b1fa2"/>
+    <text class="n-title" x="165" y="42" font-size="10">加入购物车</text>
+    <rect class="n-rect" x="225" y="30" width="90" height="24" fill="#7b1fa2"/>
+    <text class="n-title" x="270" y="42" font-size="10">提交订单</text>
+    <rect class="n-rect" x="330" y="30" width="90" height="24" fill="#7b1fa2"/>
+    <text class="n-title" x="375" y="42" font-size="10">在线支付</text>
+    <rect class="n-rect" x="435" y="30" width="90" height="24" fill="#7b1fa2"/>
+    <text class="n-title" x="480" y="42" font-size="10">确认收货</text>
+    <!-- 互动线 -->
+    <line x1="0" y1="60" x2="660" y2="60" stroke="#7b1fa2" stroke-width="1" stroke-dasharray="5 3"/>
+    <text x="655" y="65" font-size="8" fill="#7b1fa2" font-family="inherit" text-anchor="end">互动线</text>
+    <!-- 前台层 -->
+    <rect x="0" y="70" width="660" height="60" fill="#fafafa" rx="0"/>
+    <text x="12" y="92" font-size="10" font-weight="600" fill="#2e7d32" font-family="inherit">前台服务</text>
+    <rect class="n-rect" x="15" y="100" width="90" height="24" fill="#2e7d32"/>
+    <text class="n-title" x="60" y="112" font-size="10">搜索结果页</text>
+    <rect class="n-rect" x="120" y="100" width="90" height="24" fill="#2e7d32"/>
+    <text class="n-title" x="165" y="112" font-size="10">购物车页</text>
+    <rect class="n-rect" x="225" y="100" width="90" height="24" fill="#2e7d32"/>
+    <text class="n-title" x="270" y="112" font-size="10">订单确认页</text>
+    <rect class="n-rect" x="330" y="100" width="90" height="24" fill="#2e7d32"/>
+    <text class="n-title" x="375" y="112" font-size="10">支付网关</text>
+    <rect class="n-rect" x="435" y="100" width="90" height="24" fill="#2e7d32"/>
+    <text class="n-title" x="480" y="112" font-size="10">物流跟踪</text>
+    <!-- 可视线 -->
+    <line x1="0" y1="130" x2="660" y2="130" stroke="#2e7d32" stroke-width="1" stroke-dasharray="5 3"/>
+    <text x="655" y="135" font-size="8" fill="#2e7d32" font-family="inherit" text-anchor="end">可视线</text>
+    <!-- 后台层 -->
+    <rect x="0" y="140" width="660" height="55" fill="#e8f5e9" rx="0"/>
+    <text x="12" y="162" font-size="10" font-weight="600" fill="#c62828" font-family="inherit">后台支撑</text>
+    <rect class="n-rect" x="15" y="168" width="90" height="24" fill="#c62828"/>
+    <text class="n-title" x="60" y="180" font-size="10">搜索引擎</text>
+    <rect class="n-rect" x="120" y="168" width="90" height="24" fill="#c62828"/>
+    <text class="n-title" x="165" y="180" font-size="10">库存系统</text>
+    <rect class="n-rect" x="225" y="168" width="90" height="24" fill="#c62828"/>
+    <text class="n-title" x="270" y="180" font-size="10">订单系统</text>
+    <rect class="n-rect" x="330" y="168" width="90" height="24" fill="#c62828"/>
+    <text class="n-title" x="375" y="180" font-size="10">风控引擎</text>
+    <rect class="n-rect" x="435" y="168" width="90" height="24" fill="#c62828"/>
+    <text class="n-title" x="480" y="180" font-size="10">WMS系统</text>
+    <!-- 跨层交互箭头 -->
+    <line class="conn-anim" x1="60" y1="54" x2="60" y2="100" stroke="#7b1fa2"/>
+    <line class="conn-anim" x1="270" y1="54" x2="270" y2="100" stroke="#7b1fa2"/>
+    <line class="conn-anim" x1="270" y1="124" x2="270" y2="168" stroke="#c62828"/>
+    <line class="conn-anim" x1="375" y1="124" x2="375" y2="168" stroke="#c62828"/>
+  </svg>
+</div>
+
+<!-- ===== 29. 故事板 Storyboard ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-loop">UX</span>
+    <span class="section-title">故事板 Storyboard</span>
+  </div>
+  <p class="section-desc">用序列帧展示用户使用场景，适合产品叙事、用户研究、需求沟通</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <!-- 帧1 -->
+    <rect x="10" y="10" width="150" height="160" rx="8" fill="#fafafa" stroke="#e0e0e0" stroke-width="1.5"/>
+    <rect x="10" y="10" width="150" height="28" rx="8" fill="#7b1fa2"/>
+    <text x="85" y="28" font-size="10" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">场景 1: 发现需求</text>
+    <!-- 简笔画: 人物看手机 -->
+    <circle cx="85" cy="55" r="10" fill="none" stroke="#7b1fa2" stroke-width="2"/>
+    <line x1="85" y1="65" x2="85" y2="85" stroke="#7b1fa2" stroke-width="2"/>
+    <line x1="75" y1="75" x2="95" y2="75" stroke="#7b1fa2" stroke-width="2"/>
+    <rect x="65" y="90" width="40" height="25" rx="4" fill="none" stroke="#7b1fa2" stroke-width="2"/>
+    <text x="85" y="130" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">午休刷手机</text>
+    <text x="85" y="145" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">看到朋友推荐</text>
+    <!-- 帧间箭头 -->
+    <line class="conn" x1="162" y1="90" x2="176" y2="90" marker-end="url(#ah28)"/>
+    <line class="conn-anim" x1="162" y1="90" x2="176" y2="90" stroke="#7b1fa2"/>
+    <!-- 帧2 -->
+    <rect x="178" y="10" width="150" height="160" rx="8" fill="#fafafa" stroke="#e0e0e0" stroke-width="1.5"/>
+    <rect x="178" y="10" width="150" height="28" rx="8" fill="#7b1fa2"/>
+    <text x="253" y="28" font-size="10" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">场景 2: 下载注册</text>
+    <circle cx="253" cy="55" r="10" fill="none" stroke="#7b1fa2" stroke-width="2"/>
+    <line x1="253" y1="65" x2="253" y2="85" stroke="#7b1fa2" stroke-width="2"/>
+    <line x1="243" y1="75" x2="263" y2="75" stroke="#7b1fa2" stroke-width="2"/>
+    <rect x="233" y="90" width="40" height="25" rx="4" fill="none" stroke="#7b1fa2" stroke-width="2"/>
+    <text x="253" y="130" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">下载 App</text>
+    <text x="253" y="145" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">手机号注册</text>
+    <!-- 帧间箭头 -->
+    <line class="conn" x1="330" y1="90" x2="344" y2="90" marker-end="url(#ah28)"/>
+    <line class="conn-anim" x1="330" y1="90" x2="344" y2="90" stroke="#7b1fa2"/>
+    <!-- 帧3 -->
+    <rect x="346" y="10" width="150" height="160" rx="8" fill="#fafafa" stroke="#e0e0e0" stroke-width="1.5"/>
+    <rect x="346" y="10" width="150" height="28" rx="8" fill="#7b1fa2"/>
+    <text x="421" y="28" font-size="10" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">场景 3: 达成目标</text>
+    <circle cx="421" cy="55" r="10" fill="none" stroke="#2e7d32" stroke-width="2"/>
+    <line x1="421" y1="65" x2="421" y2="85" stroke="#2e7d32" stroke-width="2"/>
+    <line x1="411" y1="75" x2="416" y2="65" stroke="#2e7d32" stroke-width="2"/>
+    <line x1="431" y1="75" x2="426" y2="65" stroke="#2e7d32" stroke-width="2"/>
+    <rect x="401" y="90" width="40" height="25" rx="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+    <text x="421" y="130" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">找到想要内容</text>
+    <text x="421" y="145" font-size="9" fill="#2e7d32" font-family="inherit">✓ 任务完成</text>
+    <!-- 帧间箭头 -->
+    <line class="conn" x1="498" y1="90" x2="512" y2="90" marker-end="url(#ah28)"/>
+    <line class="conn-anim" x1="498" y1="90" x2="512" y2="90" stroke="#7b1fa2"/>
+    <!-- 帧4 -->
+    <rect x="514" y="10" width="136" height="160" rx="8" fill="#fafafa" stroke="#e0e0e0" stroke-width="1.5"/>
+    <rect x="514" y="10" width="136" height="28" rx="8" fill="#ff8f00"/>
+    <text x="582" y="28" font-size="10" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">场景 4: 分享</text>
+    <circle cx="582" cy="55" r="10" fill="none" stroke="#ff8f00" stroke-width="2"/>
+    <line x1="582" y1="65" x2="582" y2="85" stroke="#ff8f00" stroke-width="2"/>
+    <line x1="572" y1="75" x2="577" y2="65" stroke="#ff8f00" stroke-width="2"/>
+    <line x1="592" y1="75" x2="587" y2="65" stroke="#ff8f00" stroke-width="2"/>
+    <rect x="562" y="90" width="40" height="25" rx="4" fill="#fff3e0" stroke="#ff8f00" stroke-width="2"/>
+    <text x="582" y="130" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">分享到朋友圈</text>
+    <text x="582" y="145" font-size="9" fill="#ff8f00" font-family="inherit">★ 推荐行为</text>
+    <!-- 底部标注 -->
+    <text x="330" y="190" font-size="10" fill="#999" font-family="inherit" text-anchor="middle">用户故事: 作为一名上班族，我想在碎片时间快速找到高质量内容，以便自我提升</text>
+    <text x="330" y="208" font-size="10" fill="#bbb" font-family="inherit" text-anchor="middle">情绪曲线: 好奇 → 尝试 → 满足 → 惊喜</text>
+  </svg>
+</div>
+
+<!-- ===== 30. 循环图 Circular Flow ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-blue">循环</span>
+    <span class="section-title">循环图 Circular Flow</span>
+  </div>
+  <p class="section-desc">展示闭合循环中的各阶段流转，适合生命周期、PDCA、持续改进</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <defs>
+      <marker id="ah30" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 圆形排布4个节点 -->
+    <!-- 节点1: Plan (顶部) -->
+    <circle cx="290" cy="60" r="38" fill="#1565c0" class="sm-circle"/>
+    <text class="sm-label" x="290" y="56">计划</text>
+    <text class="sm-sub" x="290" y="73">Plan</text>
+    <!-- 节点2: Do (右侧) -->
+    <circle cx="430" cy="160" r="38" fill="#1976d2" class="sm-circle"/>
+    <text class="sm-label" x="430" y="156">执行</text>
+    <text class="sm-sub" x="430" y="173">Do</text>
+    <!-- 节点3: Check (底部) -->
+    <circle cx="290" cy="210" r="38" fill="#1e88e5" class="sm-circle"/>
+    <text class="sm-label" x="290" y="206">检查</text>
+    <text class="sm-sub" x="290" y="223">Check</text>
+    <!-- 节点4: Act (左侧) -->
+    <circle cx="150" cy="160" r="38" fill="#42a5f5" class="sm-circle"/>
+    <text class="sm-label" x="150" y="156">改进</text>
+    <text class="sm-sub" x="150" y="173">Act</text>
+    <!-- 弧形箭头 -->
+    <path class="conn" d="M320,80 Q370,120 398,140" fill="none" marker-end="url(#ah30)"/>
+    <path class="conn-anim" d="M320,80 Q370,120 398,140" stroke="#1565c0"/>
+    <path class="conn" d="M418,195 Q370,220 328,210" fill="none" marker-end="url(#ah30)"/>
+    <path class="conn-anim" d="M418,195 Q370,220 328,210" stroke="#1565c0"/>
+    <path class="conn" d="M262,218 Q220,220 188,192" fill="none" marker-end="url(#ah30)"/>
+    <path class="conn-anim" d="M262,218 Q220,220 188,192" stroke="#1565c0"/>
+    <path class="conn" d="M170,127 Q200,80 258,80" fill="none" marker-end="url(#ah30)"/>
+    <path class="conn-anim" d="M170,127 Q200,80 258,80" stroke="#1565c0"/>
+    <!-- 中心标注 -->
+    <text x="290" y="148" font-size="10" fill="#1565c0" font-weight="600" font-family="inherit" text-anchor="middle">PDCA</text>
+    <text x="290" y="163" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">持续改进</text>
+    <!-- 循环标记 -->
+    <circle cx="360" cy="105" r="3" fill="#1565c0" opacity="0.6">
+      <animate attributeName="opacity" values="0.6;0.2;0.6" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+  </svg>
+</div>
+
+<!-- ===== 31. 反馈循环 Feedback Loop ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-blue">循环</span>
+    <span class="section-title">反馈循环 Feedback Loop</span>
+  </div>
+  <p class="section-desc">展示输入-处理-输出-反馈的闭环链路，适合控制系统、推荐算法、A/B测试</p>
+  <svg class="flow-svg" viewBox="0 0 660 180">
+    <defs>
+      <marker id="ah31" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 输入 -->
+    <rect class="n-rect" x="20" y="60" width="100" height="50" fill="#1565c0"/>
+    <text class="n-title" x="70" y="81">输入信号</text>
+    <text class="n-desc" x="70" y="97">用户行为</text>
+    <!-- 处理 -->
+    <line class="conn" x1="122" y1="85" x2="165" y2="85" marker-end="url(#ah31)"/>
+    <line class="conn-anim" x1="122" y1="85" x2="165" y2="85" stroke="#1565c0"/>
+    <rect class="n-rect" x="167" y="60" width="110" height="50" fill="#1565c0"/>
+    <text class="n-title" x="222" y="81">处理系统</text>
+    <text class="n-desc" x="222" y="97">算法模型</text>
+    <!-- 输出 -->
+    <line class="conn" x1="279" y1="85" x2="322" y2="85" marker-end="url(#ah31)"/>
+    <line class="conn-anim" x1="279" y1="85" x2="322" y2="85" stroke="#1565c0"/>
+    <rect class="n-rect" x="324" y="60" width="100" height="50" fill="#1565c0"/>
+    <text class="n-title" x="374" y="81">输出结果</text>
+    <text class="n-desc" x="374" y="97">推荐内容</text>
+    <!-- 反馈盒 -->
+    <rect class="n-rect" x="324" y="130" width="100" height="40" fill="#7c3aed"/>
+    <text class="n-title" x="374" y="150">反馈收集</text>
+    <!-- 反馈回路 (输出→反馈→输入) -->
+    <line class="conn" x1="374" y1="110" x2="374" y2="128" marker-end="url(#ah31)"/>
+    <line class="conn-anim" x1="374" y1="110" x2="374" y2="128" stroke="#7c3aed"/>
+    <path class="conn" d="M324,150 L30,150 L70,112"/>
+    <path class="conn-anim" d="M324,150 L30,150 L70,112" stroke="#7c3aed"/>
+    <!-- 标注 +/- -->
+    <text x="280" y="143" font-size="10" fill="#2e7d32" font-weight="700" font-family="inherit" text-anchor="middle">+ 正反馈</text>
+    <text x="170" y="143" font-size="10" fill="#c62828" font-weight="700" font-family="inherit" text-anchor="middle">- 负反馈</text>
+    <!-- 反馈方向标注 -->
+    <text x="180" y="163" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">← 调整输入 ←</text>
+  </svg>
+</div>
+
+<!-- ===== 32. 飞轮效应图 Flywheel ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-blue">循环</span>
+    <span class="section-title">飞轮效应图 Flywheel</span>
+  </div>
+  <p class="section-desc">展示自增强的商业循环，适合战略规划、增长模型、商业模式设计</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <!-- 大飞轮 -->
+    <circle cx="300" cy="120" r="80" fill="none" stroke="#1565c0" stroke-width="6" opacity="0.15"/>
+    <circle cx="300" cy="120" r="80" fill="none" stroke="#1565c0" stroke-width="2" stroke-dasharray="8 6"/>
+    <path d="M300,120 L300,40" stroke="#1565c0" stroke-width="2"/>
+    <!-- 旋转弧线动画 -->
+    <path d="M360,60 A80,80 0 0,1 380,160" fill="none" stroke="#1565c0" stroke-width="2" stroke-dasharray="8 4">
+      <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1s" repeatCount="indefinite"/>
+    </path>
+    <!-- 推动块1: 优质内容 -->
+    <rect class="n-rect" x="380" y="35" width="110" height="36" fill="#1565c0"/>
+    <text class="n-title" x="435" y="53" font-size="10">优质内容</text>
+    <line x1="370" y1="53" x2="378" y2="53" stroke="#1565c0" stroke-width="1.5"/>
+    <!-- 推动块2: 用户增长 -->
+    <rect class="n-rect" x="405" y="90" width="110" height="36" fill="#1976d2"/>
+    <text class="n-title" x="460" y="108" font-size="10">用户增长</text>
+    <line x1="380" y1="108" x2="403" y2="108" stroke="#1976d2" stroke-width="1.5"/>
+    <!-- 推动块3: 数据积累 -->
+    <rect class="n-rect" x="395" y="150" width="110" height="36" fill="#1e88e5"/>
+    <text class="n-title" x="450" y="168" font-size="10">数据积累</text>
+    <line x1="380" y1="168" x2="393" y2="168" stroke="#1e88e5" stroke-width="1.5"/>
+    <!-- 推动块4: 算法优化 -->
+    <rect class="n-rect" x="355" y="120" width="110" height="36" fill="#42a5f5"/>
+    <text class="n-title" x="410" y="138" font-size="10">算法优化</text>
+    <line x1="380" y1="138" x2="380" y2="138" stroke="#42a5f5" stroke-width="1.5"/>
+    <!-- 飞轮中心文字 -->
+    <text x="300" y="118" font-size="14" font-weight="700" fill="#1565c0" font-family="inherit" text-anchor="middle">增长</text>
+    <text x="300" y="134" font-size="11" font-weight="600" fill="#1565c0" font-family="inherit" text-anchor="middle">飞轮</text>
+    <!-- 箭头标注循环方向 -->
+    <text x="380" y="80" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">↻ 增强循环</text>
+    <!-- 初始推动力 -->
+    <g transform="translate(20,30)">
+      <rect x="0" y="0" width="130" height="40" rx="6" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+      <text x="65" y="18" font-size="10" fill="#1565c0" font-weight="600" font-family="inherit" text-anchor="middle">初始推动力</text>
+      <text x="65" y="33" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">内容冷启动</text>
+    </g>
+    <line class="conn-anim" x1="150" y1="50" x2="380" y2="53" stroke="#1565c0"/>
+    <!-- 关键洞察 -->
+    <rect x="20" y="90" width="150" height="70" rx="6" fill="#fafafa" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="35" y="108" font-size="10" font-weight="600" fill="#1B365D" font-family="inherit">飞轮核心理念</text>
+    <text x="35" y="125" font-size="9" fill="#999" font-family="inherit">每个环节的产出</text>
+    <text x="35" y="140" font-size="9" fill="#999" font-family="inherit">自动驱动下一环</text>
+    <text x="35" y="155" font-size="9" fill="#999" font-family="inherit">形成自我强化循环</text>
+  </svg>
+</div>
+
+<!-- ===== 33. 金字塔图 Pyramid ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-nested">层级</span>
+    <span class="section-title">金字塔图 Pyramid</span>
+  </div>
+  <p class="section-desc">展示自上而下或自下而上的层次结构，适合马斯洛需求、战略分层、能力模型</p>
+  <svg class="flow-svg" viewBox="0 0 660 240">
+    <!-- 第5层（底部最宽）基础 -->
+    <polygon points="40,200 620,200 560,165 100,165" fill="#ffcdd2" stroke="#c62828" stroke-width="1.5"/>
+    <text x="330" y="188" font-size="11" font-weight="600" fill="#c62828" font-family="inherit" text-anchor="middle">数据基础设施</text>
+    <!-- 第4层 信息 -->
+    <polygon points="100,165 560,165 510,130 150,130" fill="#ef9a9a" stroke="#c62828" stroke-width="1.5"/>
+    <text x="330" y="152" font-size="11" font-weight="600" fill="#c62828" font-family="inherit" text-anchor="middle">信息管理层</text>
+    <!-- 第3层 知识 -->
+    <polygon points="150,130 510,130 460,95 200,95" fill="#e57373" stroke="#c62828" stroke-width="1.5"/>
+    <text x="330" y="117" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">知识体系层</text>
+    <!-- 第2层 智慧 -->
+    <polygon points="200,95 460,95 420,60 240,60" fill="#ef5350" stroke="#c62828" stroke-width="1.5"/>
+    <text x="330" y="82" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">商业智慧层</text>
+    <!-- 第1层（顶部最窄）愿景 -->
+    <polygon points="240,60 420,60 390,30 270,30" fill="#c62828"/>
+    <text x="330" y="49" font-size="11" font-weight="600" fill="#fff" font-family="inherit" text-anchor="middle">战略愿景</text>
+    <!-- 层级标注 -->
+    <text x="620" y="188" font-size="9" fill="#999" font-family="inherit" dominant-baseline="central">L1 基础</text>
+    <text x="620" y="152" font-size="9" fill="#999" font-family="inherit" dominant-baseline="central">L2</text>
+    <text x="620" y="117" font-size="9" fill="#999" font-family="inherit" dominant-baseline="central">L3</text>
+    <text x="620" y="82" font-size="9" fill="#999" font-family="inherit" dominant-baseline="central">L4</text>
+    <text x="620" y="49" font-size="9" fill="#999" font-family="inherit" dominant-baseline="central">L5 顶层</text>
+    <!-- DIKW 标注 -->
+    <g transform="translate(10,140)">
+      <text x="0" y="0" font-size="9" fill="#999" font-family="inherit">DIKW</text>
+      <text x="0" y="14" font-size="9" fill="#999" font-family="inherit">模型</text>
+    </g>
+  </svg>
+</div>
+
+<!-- ===== 34. 依赖关系图 Dependency Graph ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-nested">层级</span>
+    <span class="section-title">依赖关系图 Dependency Graph</span>
+  </div>
+  <p class="section-desc">展示任务/模块间的有向无环依赖，适合构建系统、项目调度、模块解耦分析</p>
+  <svg class="flow-svg" viewBox="0 0 660 220">
+    <defs>
+      <marker id="ah34" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 节点A (根源) -->
+    <rect class="n-rect" x="280" y="5" width="100" height="36" fill="#1B365D"/>
+    <text class="n-title" x="330" y="23">A: 编译</text>
+    <!-- A→B -->
+    <line class="conn" x1="280" y1="41" x2="130" y2="75" marker-end="url(#ah34)"/>
+    <line class="conn-anim" x1="280" y1="41" x2="130" y2="75"/>
+    <!-- A→C -->
+    <line class="conn" x1="380" y1="41" x2="530" y2="75" marker-end="url(#ah34)"/>
+    <line class="conn-anim" x1="380" y1="41" x2="530" y2="75"/>
+    <!-- 节点B -->
+    <rect class="n-rect" x="80" y="75" width="100" height="36" fill="#1B365D"/>
+    <text class="n-title" x="130" y="93">B: 单元测试</text>
+    <!-- 节点C -->
+    <rect class="n-rect" x="480" y="75" width="100" height="36" fill="#1B365D"/>
+    <text class="n-title" x="530" y="93">C: 集成测试</text>
+    <!-- B→D -->
+    <line class="conn" x1="80" y1="111" x2="130" y2="150" marker-end="url(#ah34)"/>
+    <line class="conn-anim" x1="80" y1="111" x2="130" y2="150"/>
+    <!-- C→D -->
+    <line class="conn" x1="580" y1="111" x2="530" y2="150" marker-end="url(#ah34)"/>
+    <line class="conn-anim" x1="580" y1="111" x2="530" y2="150"/>
+    <!-- 节点D (汇聚) -->
+    <rect class="n-rect" x="280" y="145" width="100" height="36" fill="#c62828"/>
+    <text class="n-title" x="330" y="163" fill="#fff">D: 打包部署</text>
+    <!-- D→E -->
+    <line class="conn" x1="330" y1="181" x2="330" y2="195" marker-end="url(#ah34)"/>
+    <line class="conn-anim" x1="330" y1="181" x2="330" y2="195"/>
+    <!-- 节点E (终点) -->
+    <rect class="n-rect" x="280" y="195" width="100" height="32" fill="#2e7d32"/>
+    <text class="n-title" x="330" y="211" fill="#fff">E: 上线</text>
+    <!-- 依赖线标注 -->
+    <text x="200" y="55" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">强依赖</text>
+    <text x="450" y="55" font-size="9" fill="#999" font-family="inherit" text-anchor="middle">强依赖</text>
+    <text x="200" y="135" font-size="9" fill="#c62828" font-weight="600" font-family="inherit" text-anchor="middle">关键路径</text>
+  </svg>
+</div>
+
+<!-- ===== 35. 事件链 Event Chain ===== -->
+<div class="section">
+  <div class="section-head">
+    <span class="section-tag tag-nested">层级</span>
+    <span class="section-title">事件链 Event Chain</span>
+  </div>
+  <p class="section-desc">展示事件的因果触发关系，适合故障分析、事件溯源、业务流程串联</p>
+  <svg class="flow-svg" viewBox="0 0 660 140">
+    <defs>
+      <marker id="ah35" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon class="arrow-fill" points="0 0, 7 2.5, 0 5"/>
+      </marker>
+    </defs>
+    <!-- 事件1 -->
+    <circle cx="70" cy="70" r="36" fill="#1B365D" class="sm-circle"/>
+    <text class="sm-label" x="70" y="66">用户点击</text>
+    <text class="sm-sub" x="70" y="82">Event 1</text>
+    <!-- 因果箭头1 -->
+    <line class="conn" x1="108" y1="70" x2="147" y2="70" marker-end="url(#ah35)"/>
+    <line class="conn-anim" x1="108" y1="70" x2="147" y2="70"/>
+    <text class="conn-label" x="127" y="63">触发</text>
+    <!-- 事件2 -->
+    <circle cx="185" cy="70" r="36" fill="#1B365D" class="sm-circle"/>
+    <text class="sm-label" x="185" y="66">请求鉴权</text>
+    <text class="sm-sub" x="185" y="82">Event 2</text>
+    <!-- 因果箭头2 -->
+    <line class="conn" x1="223" y1="70" x2="262" y2="70" marker-end="url(#ah35)"/>
+    <line class="conn-anim" x1="223" y1="70" x2="262" y2="70"/>
+    <text class="conn-label" x="242" y="63">通过</text>
+    <!-- 事件3 -->
+    <circle cx="300" cy="70" r="36" fill="#2a5580" class="sm-circle"/>
+    <text class="sm-label" x="300" y="66">数据查询</text>
+    <text class="sm-sub" x="300" y="82">Event 3</text>
+    <!-- 因果箭头3 -->
+    <line class="conn" x1="338" y1="70" x2="377" y2="70" marker-end="url(#ah35)"/>
+    <line class="conn-anim" x1="338" y1="70" x2="377" y2="70"/>
+    <text class="conn-label" x="357" y="63">返回</text>
+    <!-- 事件4 -->
+    <circle cx="415" cy="70" r="36" fill="#c62828" class="sm-circle"/>
+    <text class="sm-label" x="415" y="66">响应渲染</text>
+    <text class="sm-sub" x="415" y="82">Event 4</text>
+    <!-- 因果箭头4 -->
+    <line class="conn" x1="453" y1="70" x2="492" y2="70" marker-end="url(#ah35)"/>
+    <line class="conn-anim" x1="453" y1="70" x2="492" y2="70"/>
+    <text class="conn-label" x="472" y="63">展示</text>
+    <!-- 事件5 -->
+    <circle cx="530" cy="70" r="36" fill="#2e7d32" class="sm-circle"/>
+    <text class="sm-label" x="530" y="66">用户交互</text>
+    <text class="sm-sub" x="530" y="82">Event 5</text>
+    <!-- 事件链说明 -->
+    <text x="330" y="125" font-size="10" fill="#999" font-family="inherit" text-anchor="middle">因果链: 每个事件是前一个事件的结果，同时触发下一个事件</text>
+  </svg>
+</div>
+
+</body>
+</html>
