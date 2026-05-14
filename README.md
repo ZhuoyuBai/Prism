@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>Prism · 棱镜</h1>
+  <h1>棱镜.Skill</h1>
   <p><b>把一个复杂概念折射成清晰、可视、可交互的 HTML 认知地图。</b></p>
   <p>
     <img src="https://img.shields.io/badge/license-Non--Commercial-blue.svg?style=flat-square" alt="License: Non-Commercial">

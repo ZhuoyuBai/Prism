@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>Prism</h1>
+  <h1>Prism.Skill</h1>
   <p><b>Turn a complex concept into a clear, visual, interactive HTML cognition map.</b></p>
   <p>
     <img src="https://img.shields.io/badge/license-Non--Commercial-blue.svg?style=flat-square" alt="License: Non-Commercial">
